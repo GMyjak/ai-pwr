@@ -6,7 +6,8 @@ namespace Genetics
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Problem p = ProblemLoader.LoadProblemFromFile("../../../TestData/zad0.txt");
+            Console.WriteLine(p.Paths[1].A.Y);
         }
     }
 }
