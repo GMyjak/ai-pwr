@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Genetics
 {
@@ -17,13 +15,13 @@ namespace Genetics
                 var line = reader.ReadLine()?.Split(';');
                 result.Dimensions = new Point(line[0], line[1]);
 
-                result.Paths = new List<PointPair>();
+                result.ConnectedPoints = new List<PointPair>();
                 line = reader.ReadLine()?.Split(';');
                 while (line != null)
                 {
                     Point a = new Point(line[0], line[1]);
                     Point b = new Point(line[2], line[3]);
-                    result.Paths.Add(new PointPair(a, b));
+                    result.ConnectedPoints.Add(new PointPair(a, b));
                     line = reader.ReadLine()?.Split(';');
                 }
             }
