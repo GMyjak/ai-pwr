@@ -8,8 +8,9 @@ namespace Genetics
         {
             Problem p = ProblemLoader.LoadProblemFromFile("../../../TestData/zad1.txt");
             
-            TestGenerator(p);
+            TestGA(p);
 
+            //TestGenerator(p);
         }
 
         static void TestGenerator(Problem p)
@@ -21,6 +22,26 @@ namespace Genetics
             {
                 Console.WriteLine(individual.Evaluate());
             }
+        }
+
+        static void TestGA(Problem p)
+        {
+            GeneticAlgorithm ga = new GeneticAlgorithm()
+            {
+                Problem = p,
+                CrossProbability = 0.8f,
+                GenerationCount = 100,
+                InitFactoryMethod = IndividualFactory.GenerateByConnectingPoints,
+                MutationProbability = 0.2f,
+                PopulationSize = 40
+            };
+
+            ga.OnIterationFinished += (idx, pop) =>
+            {
+                // todo
+            };
+
+            ga.Run();
         }
     }
 }

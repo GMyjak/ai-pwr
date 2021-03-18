@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Genetics
 {
@@ -32,6 +31,12 @@ namespace Genetics
         {
             return d1 == d2 || d1 == GetOpposite(d2);
         }
+    }
+
+    public enum SelectionType
+    {
+        Tournament,
+        Roulette
     }
 
     public struct Segment
@@ -78,6 +83,16 @@ namespace Genetics
     public struct Path
     {
         public List<Segment> Segments { get; set; }
+
+        public Path Copy()
+        {
+            Path copy = new Path()
+            {
+                Segments = new List<Segment>(this.Segments)
+            };
+
+            return copy;
+        }
     }
 
     public class Individual
@@ -88,10 +103,26 @@ namespace Genetics
         public static float pathOutsideBoardPenaltyWeight = 1.4f;
         public static float segmentNumberWeight = 0.8f;
         public static float pathLengthWeight = 0.15f;
+        public static int tournamentSize = 8;
 
         public Problem Problem { get; set; }
         public List<Path> Paths { get; set; }
+        public float? Score { get; set; }
 
+        public Individual Copy()
+        {
+            Individual copy = new Individual()
+            {
+                Problem = this.Problem,
+                Score = this.Score,
+                Paths = new List<Path>()
+            };
+            Paths.ForEach(p => copy.Paths.Add(p.Copy()));
+
+            return copy;
+        }
+
+        #region IndividualEvaluation
         // Fitness function
         public float Evaluate()
         {
@@ -146,7 +177,6 @@ namespace Genetics
             }
 
             // Path outside penalty
-            
             foreach (var innerList in allSegmentPoints)
             {
                 bool firstTimeOutside = true;
@@ -168,6 +198,12 @@ namespace Genetics
 
             return initialScore;
         }
+
+        public void AdaptToPopulation(float minimalScore)
+        {
+            Score = minimalScore / Score;
+        }
+        #endregion
 
         #region Mutations
         public bool MutateA(int pathIndex, int segmentIndex, Direction direction)
@@ -281,5 +317,71 @@ namespace Genetics
             return true;
         }
         #endregion
+
+        public static Individual Cross(Individual a, Individual b)
+        {
+            Random rng = UniversalRandom.Rng;
+            int pivot = rng.Next() % a.Paths.Count;
+
+            List<Path> newList = new List<Path>();
+
+            for (int i = 0; i < pivot; i++)
+            {
+                newList.Add(a.Paths[i]);
+            }
+
+            for (int i = pivot; i < a.Paths.Count; i++)
+            {
+                newList.Add(b.Paths[i]);
+            }
+
+            return new Individual { Paths = newList, Problem = a.Problem, Score = null }; ;
+        }
+
+        #region Selection
+        public static Individual Select(List<Individual> population, SelectionType selectionType)
+        {
+            if (selectionType == SelectionType.Tournament)
+            {
+                return SelectTournament(population);
+            }
+            else if (selectionType == SelectionType.Roulette)
+            {
+                return SelectRoulette(population);
+            }
+
+            throw new Exception("Invalid selection method");
+        }
+
+        private static Individual SelectTournament(List<Individual> population)
+        {
+            Random rng = UniversalRandom.Rng;
+            List<Individual> temp = new List<Individual>(population);
+            var result = temp.OrderBy(ind => rng.Next())
+                .Take(tournamentSize)
+                .OrderBy(ind => ind.Score)
+                .Last();
+
+            return result;
+        }
+
+        private static Individual SelectRoulette(List<Individual> population)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        public void Mutate()
+        {
+            Random rng = UniversalRandom.Rng;
+            int pathIndex = rng.Next() % Paths.Count;
+            int segmentIndex = rng.Next() % Paths[pathIndex].Segments.Count;
+            Direction direction = (Direction) (rng.Next() % 4);
+            int pivot = rng.Next() % (Paths[pathIndex].Segments[segmentIndex].Length + 1);
+            int divideSegmentIndex = rng.Next() % 2;
+
+            MutateB(pathIndex, segmentIndex, direction, pivot, divideSegmentIndex);
+        }
     }
 }
