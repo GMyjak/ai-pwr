@@ -25,9 +25,10 @@ namespace Genetics
 
             generationIndex = 0;
             population = InitFactoryMethod(Problem, PopulationSize);
-            population.ForEach(i => i.Score = i.Evaluate());
-            float minimalScore = population.Min(i => i.Score.Value);
-            population.ForEach(i => i.AdaptToPopulation(minimalScore));
+            population.ForEach(ind => ind.Mutate());
+            population.ForEach(i => i.Penalty = i.Evaluate());
+            BulkEvaluate();
+
             OnIterationFinished(generationIndex, population);
 
             while (generationIndex < GenerationCount)
@@ -45,17 +46,22 @@ namespace Genetics
                         newIndividual.Mutate();
                     }
 
-                    newIndividual.Score = newIndividual.Evaluate();
+                    newIndividual.Penalty = newIndividual.Evaluate();
                     newPopulation.Add(newIndividual);
                 }
 
-                minimalScore = newPopulation.Min(i => i.Score.Value);
-                newPopulation.ForEach(i => i.AdaptToPopulation(minimalScore));
+                BulkEvaluate();
 
                 population = newPopulation;
                 generationIndex++;
                 OnIterationFinished(generationIndex, population);
             }
+        }
+
+        private void BulkEvaluate()
+        {
+            float minimalPenalty = population.Min(i => i.Penalty);
+            population.ForEach(i => i.AdaptToPopulation(minimalPenalty));
         }
     }
 }

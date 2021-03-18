@@ -93,21 +93,27 @@ namespace Genetics
 
             return copy;
         }
+
+        //public bool IsValid(PointPair points)
+        //{
+        //    
+        //}
     }
 
     public class Individual
     {
         // TODO move these to config
-        public static float crossPenalty = 9.0f;
-        public static float pathOutsideBoardPenalty = 9.0f;
-        public static float pathOutsideBoardPenaltyWeight = 1.4f;
+        public static float crossPenalty = 90.0f;
+        public static float pathOutsideBoardPenalty = 90.0f;
+        public static float pathOutsideBoardPenaltyWeight = 10.4f;
         public static float segmentNumberWeight = 0.8f;
         public static float pathLengthWeight = 0.15f;
         public static int tournamentSize = 8;
 
         public Problem Problem { get; set; }
         public List<Path> Paths { get; set; }
-        public float? Score { get; set; }
+        public float Score { get; set; }
+        public float Penalty { get; set; }
 
         public Individual Copy()
         {
@@ -203,16 +209,34 @@ namespace Genetics
         {
             Score = minimalScore / Score;
         }
+
         #endregion
 
         #region Mutations
+        public void Mutate()
+        {
+            Random rng = UniversalRandom.Rng;
+            int pathIndex = rng.Next() % Paths.Count;
+            int segmentIndex = rng.Next() % Paths[pathIndex].Segments.Count;
+            Direction direction = (Direction)(rng.Next() % 4);
+            int pivot = rng.Next() % (Paths[pathIndex].Segments[segmentIndex].Length);
+            int divideSegmentIndex = rng.Next() % 2;
+            int offset = 1;
+            offset = rng.NextDouble() > 0.85 ? 2 : offset;
+            offset = rng.NextDouble() > 0.96 ? 3 : offset;
+
+
+            MutateB(pathIndex, segmentIndex, direction, pivot, divideSegmentIndex, offset);
+        }
+
         public bool MutateA(int pathIndex, int segmentIndex, Direction direction)
         {
             return MutateB(pathIndex, segmentIndex, direction, 0, 0);
         }
 
-        public bool MutateB(int pathIndex, int segmentIndex, Direction direction, int pivot, int dividedSegmentIndex)
+        public bool MutateB(int pathIndex, int segmentIndex, Direction direction, int pivot, int dividedSegmentIndex, int offset = 1)
         {
+            #region InitialConditions
             if (pathIndex < 0 || pathIndex >= Paths.Count)
             {
                 return false;
@@ -222,32 +246,21 @@ namespace Genetics
             {
                 return false;
             }
-            else
+
+            Segment s = Paths[pathIndex].Segments[segmentIndex];
+            if (pivot < 0 || pivot > s.Length)
             {
-                Segment s = Paths[pathIndex].Segments[segmentIndex];
-
-                if (pivot < 0 || pivot > s.Length)
-                {
-                    return false;
-                }
-
-                List<Direction> vertical = new List<Direction>() { Direction.Up, Direction.Down };
-                List<Direction> horizontal = new List<Direction>() { Direction.Left, Direction.Right };
-
-                if (vertical.Contains(s.Direction) && vertical.Contains(direction))
-                {
-                    return false;
-                }
-                else if (horizontal.Contains(s.Direction) && horizontal.Contains(direction))
-                {
-                    return false;
-                }
+                return false;
             }
-
+            if (DirectionUtils.Parallel(s.Direction, direction))
+            {
+                return false;
+            }
             if (dividedSegmentIndex != 0 && dividedSegmentIndex != 1)
             {
                 return false;
             }
+            #endregion
 
             List<Segment> workList = Paths[pathIndex].Segments;
 
@@ -263,61 +276,39 @@ namespace Genetics
                 segmentIndex += dividedSegmentIndex;
             }
 
-            // Now we just have to consider changes according to A type mutation
-            // If it is first segment or segment has been split we have to add dummy segment with length 0
-            if (segmentIndex == 0 || workList[segmentIndex - 1].Direction == workList[segmentIndex].Direction)
-            {
-                workList.Insert(segmentIndex, new Segment(direction, 0));
-                segmentIndex++;
-            }
-            if (segmentIndex == workList.Count - 1 || workList[segmentIndex + 1].Direction == workList[segmentIndex].Direction)
-            {
-                workList.Insert(segmentIndex, new Segment(direction, 0));
-            }
-            // Update segment before
-            int updatedLengthBefore = workList[segmentIndex - 1].Length;
-            if (workList[segmentIndex - 1].Direction == direction)
-            {
-                updatedLengthBefore++;
-            }
-            else
-            {
-                updatedLengthBefore--;
-            }
+            workList.Insert(segmentIndex, new Segment(direction, offset));
+            workList.Insert(segmentIndex + 2, new Segment(direction, offset));
 
-            if (updatedLengthBefore > 0)
-            {
-                Segment newSegment = new Segment(workList[segmentIndex - 1].Direction, updatedLengthBefore);
-                workList.RemoveAt(segmentIndex - 1);
-                workList.Insert(segmentIndex, newSegment);
-            }
-            // Merge updated segment with segment before
-            else
-            {
-                workList.RemoveAt(segmentIndex - 1);
-                Segment? merged = workList[segmentIndex - 1].Merge(workList[segmentIndex]);
-                if (merged != null)
-                {
-                    workList.Insert(segmentIndex - 1, merged.Value);
-                    workList.RemoveAt(segmentIndex);
-                    workList.RemoveAt(segmentIndex);
-                    segmentIndex--;
-                }
-                else
-                {
-                    segmentIndex--;
-                    workList.RemoveAt(segmentIndex);
-                    workList.RemoveAt(segmentIndex);
-                    segmentIndex--;
-                }
-
-            }
-            // TODO handle second part
+            FixSegments(pathIndex);
 
             return true;
         }
+
+        private void FixSegments(int pathIndex)
+        {
+            Path path = Paths[pathIndex];
+            for (int i = 0; i < path.Segments.Count - 1; i++)
+            {
+                while (i < path.Segments.Count - 1 && DirectionUtils.Parallel(path.Segments[i].Direction, path.Segments[i + 1].Direction))
+                {
+                    Segment? merged = path.Segments[i].Merge(path.Segments[i + 1]);
+                    path.Segments.RemoveAt(i);
+                    path.Segments.RemoveAt(i);
+                    if (merged != null)
+                    {
+                        path.Segments.Insert(i, merged.Value);
+                    }
+                    else
+                    {
+                        i = Math.Max(i - 1, 0);
+                    }
+                }
+            }
+        }
+
         #endregion
 
+        #region Crossing
         public static Individual Cross(Individual a, Individual b)
         {
             Random rng = UniversalRandom.Rng;
@@ -335,8 +326,9 @@ namespace Genetics
                 newList.Add(b.Paths[i]);
             }
 
-            return new Individual { Paths = newList, Problem = a.Problem, Score = null }; ;
+            return new Individual { Paths = newList, Problem = a.Problem, Score = 0 }; ;
         }
+        #endregion
 
         #region Selection
         public static Individual Select(List<Individual> population, SelectionType selectionType)
@@ -367,21 +359,23 @@ namespace Genetics
 
         private static Individual SelectRoulette(List<Individual> population)
         {
-            throw new NotImplementedException();
+            Random rng = UniversalRandom.Rng;
+            float sum = population.Sum(i => i.Score);
+            float aggregate = 0;
+            float shot = (float)rng.NextDouble() * sum;
+
+            foreach (var individual in population)
+            {
+                aggregate += individual.Score;
+                if (aggregate > shot)
+                {
+                    return individual;
+                }
+            }
+
+            return population.Last();
         }
 
         #endregion
-
-        public void Mutate()
-        {
-            Random rng = UniversalRandom.Rng;
-            int pathIndex = rng.Next() % Paths.Count;
-            int segmentIndex = rng.Next() % Paths[pathIndex].Segments.Count;
-            Direction direction = (Direction) (rng.Next() % 4);
-            int pivot = rng.Next() % (Paths[pathIndex].Segments[segmentIndex].Length + 1);
-            int divideSegmentIndex = rng.Next() % 2;
-
-            MutateB(pathIndex, segmentIndex, direction, pivot, divideSegmentIndex);
-        }
     }
 }

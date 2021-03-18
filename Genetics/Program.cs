@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Genetics
 {
@@ -29,16 +30,22 @@ namespace Genetics
             GeneticAlgorithm ga = new GeneticAlgorithm()
             {
                 Problem = p,
-                CrossProbability = 0.8f,
-                GenerationCount = 100,
+                CrossProbability = 0.2f,
+                GenerationCount = 10000,
                 InitFactoryMethod = IndividualFactory.GenerateByConnectingPoints,
-                MutationProbability = 0.2f,
-                PopulationSize = 40
+                MutationProbability = 0.1f,
+                PopulationSize = 70
             };
 
             ga.OnIterationFinished += (idx, pop) =>
             {
-                // todo
+                Console.WriteLine("Generation: " + idx);
+                Console.WriteLine("Best individual: " + pop.Average(ind => ind.Penalty));
+
+                if (idx == 0 || idx == 30 || idx == 70)
+                {
+                    Console.WriteLine("XD");
+                }
             };
 
             ga.Run();

@@ -6,7 +6,7 @@ namespace Genetics
 {
     abstract class UniversalRandom
     {
-        public static int Seed { get; set; } = 3333;
+        public static int Seed { get; set; } = 2020;
 
         private static Random _rng;
         public static Random Rng
