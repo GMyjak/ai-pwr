@@ -7,7 +7,7 @@ namespace Genetics
     {
         static void Main(string[] args)
         {
-            Problem p = ProblemLoader.LoadProblemFromFile("../../../TestData/zad1.txt");
+            Problem p = ProblemLoader.LoadProblemFromFile("../../../TestData/zad2.txt");
             
             TestGA(p);
 
@@ -40,11 +40,15 @@ namespace Genetics
             ga.OnIterationFinished += (idx, pop) =>
             {
                 Console.WriteLine("Generation: " + idx);
-                Console.WriteLine("Best individual: " + pop.Average(ind => ind.Penalty));
+                //Console.WriteLine("Avg: " + pop.Average(ind => ind.Penalty));
 
-                if (idx == 0 || idx == 30 || idx == 70)
+                float minPenalty = pop.Min(i => i.Penalty);
+                Individual best = pop.First(i => i.Penalty == minPenalty);
+                Console.WriteLine("Min: " + minPenalty);
+
+                if (idx == 1200)
                 {
-                    Console.WriteLine("XD");
+                    Console.WriteLine(best);
                 }
             };
 

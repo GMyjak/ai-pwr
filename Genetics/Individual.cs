@@ -93,21 +93,21 @@ namespace Genetics
 
             return copy;
         }
-
-        //public bool IsValid(PointPair points)
-        //{
-        //    
-        //}
     }
 
     public class Individual
     {
         // TODO move these to config
-        public static float crossPenalty = 90.0f;
-        public static float pathOutsideBoardPenalty = 90.0f;
-        public static float pathOutsideBoardPenaltyWeight = 10.4f;
-        public static float segmentNumberWeight = 0.8f;
-        public static float pathLengthWeight = 0.15f;
+        //public static float crossPenalty = 90.0f;
+        //public static float pathOutsideBoardPenalty = 90.0f;
+        //public static float pathOutsideBoardPenaltyWeight = 10.4f;
+        //public static float segmentNumberWeight = 0.8f;
+        //public static float pathLengthWeight = 0.15f;
+        public static float crossPenalty =10f;
+        public static float pathOutsideBoardPenalty = 50.0f;
+        public static float pathOutsideBoardPenaltyWeight = 15f;
+        public static float segmentNumberWeight = 0.25f;
+        public static float pathLengthWeight = 0.05f;
         public static int tournamentSize = 8;
 
         public Problem Problem { get; set; }
@@ -205,9 +205,9 @@ namespace Genetics
             return initialScore;
         }
 
-        public void AdaptToPopulation(float minimalScore)
+        public void AdaptToPopulation(float minimalPenalty)
         {
-            Score = minimalScore / Score;
+            Score = minimalPenalty / Penalty;
         }
 
         #endregion
@@ -222,8 +222,10 @@ namespace Genetics
             int pivot = rng.Next() % (Paths[pathIndex].Segments[segmentIndex].Length);
             int divideSegmentIndex = rng.Next() % 2;
             int offset = 1;
-            offset = rng.NextDouble() > 0.85 ? 2 : offset;
-            offset = rng.NextDouble() > 0.96 ? 3 : offset;
+            offset = rng.NextDouble() > 0.80 ? 2 : offset;
+            offset = rng.NextDouble() > 0.90 ? 3 : offset;
+            offset = rng.NextDouble() > 0.95 ? 4 : offset;
+            offset = rng.NextDouble() > 0.99 ? 5 : offset;
 
 
             MutateB(pathIndex, segmentIndex, direction, pivot, divideSegmentIndex, offset);
@@ -277,7 +279,7 @@ namespace Genetics
             }
 
             workList.Insert(segmentIndex, new Segment(direction, offset));
-            workList.Insert(segmentIndex + 2, new Segment(direction, offset));
+            workList.Insert(segmentIndex + 2, new Segment(DirectionUtils.GetOpposite(direction), offset));
 
             FixSegments(pathIndex);
 
@@ -286,6 +288,7 @@ namespace Genetics
 
         private void FixSegments(int pathIndex)
         {
+            // TODO żeby nie była upośledzona
             Path path = Paths[pathIndex];
             for (int i = 0; i < path.Segments.Count - 1; i++)
             {
@@ -351,8 +354,8 @@ namespace Genetics
             List<Individual> temp = new List<Individual>(population);
             var result = temp.OrderBy(ind => rng.Next())
                 .Take(tournamentSize)
-                .OrderBy(ind => ind.Score)
-                .Last();
+                .OrderBy(ind => ind.Penalty)
+                .First();
 
             return result;
         }
