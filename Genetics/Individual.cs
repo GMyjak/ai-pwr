@@ -1,115 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Genetics.StructureDefinitions;
 
 namespace Genetics
 {
-    public enum Direction
-    {
-        Up = 0,
-        Down = 1,
-        Right = 2,
-        Left = 3
-    }
-
-    public abstract class DirectionUtils
-    {
-        public static Direction GetOpposite(Direction d)
-        {
-            switch (d)
-            {
-                case Direction.Up: return Direction.Down;
-                case Direction.Down: return Direction.Up;
-                case Direction.Left: return Direction.Right;
-                case Direction.Right: return Direction.Left;
-            }
-
-            throw new Exception("This exception should never be thrown XD");
-        }
-
-        public static bool Parallel(Direction d1, Direction d2)
-        {
-            return d1 == d2 || d1 == GetOpposite(d2);
-        }
-    }
-
-    public enum SelectionType
-    {
-        Tournament,
-        Roulette
-    }
-
-    public struct Segment
-    {
-        public Direction Direction { get; set; }
-        public int Length { get; set; }
-
-        public Segment(Direction d, int l)
-        {
-            Direction = d;
-            Length = l;
-        }
-
-        public Segment? Merge(Segment other)
-        {
-            if (!DirectionUtils.Parallel(Direction, other.Direction))
-            {
-                throw new Exception("Segments cannot be merged");
-            }
-
-            int newLength = Length;
-            if (Direction == other.Direction)
-            {
-                newLength += other.Length;
-            }
-            else
-            {
-                newLength -= other.Length;
-            }
-
-            Segment result = new Segment(newLength > 0 ? Direction : other.Direction, Math.Abs(newLength));
-
-            if (result.Length == 0)
-            {
-                return null;
-            }
-            else
-            {
-                return result;
-            }
-        }
-    }
-
-    public struct Path
-    {
-        public List<Segment> Segments { get; set; }
-
-        public Path Copy()
-        {
-            Path copy = new Path()
-            {
-                Segments = new List<Segment>(this.Segments)
-            };
-
-            return copy;
-        }
-    }
-
     public class Individual
     {
-        // TODO move these to config
-        //public static float crossPenalty = 90.0f;
-        //public static float pathOutsideBoardPenalty = 90.0f;
-        //public static float pathOutsideBoardPenaltyWeight = 10.4f;
-        //public static float segmentNumberWeight = 0.8f;
-        //public static float pathLengthWeight = 0.15f;
-        public static float crossPenalty =10f;
-        public static float pathOutsideBoardPenalty = 50.0f;
-        public static float pathOutsideBoardPenaltyWeight = 15f;
-        public static float segmentNumberWeight = 0.25f;
-        public static float pathLengthWeight = 0.05f;
-        public static int tournamentSize = 8;
-
         public Problem Problem { get; set; }
         public List<Path> Paths { get; set; }
         public float Score { get; set; }
@@ -137,8 +34,8 @@ namespace Genetics
             // Base score
             foreach (var path in Paths)
             {
-                initialScore += path.Segments.Count * segmentNumberWeight;
-                initialScore += path.Segments.Sum(seg => seg.Length * pathLengthWeight);
+                initialScore += path.Segments.Count * Config.segmentNumberWeight;
+                initialScore += path.Segments.Sum(seg => seg.Length * Config.pathLengthWeight);
             }
 
             // For each path calculate exact points
@@ -176,7 +73,7 @@ namespace Genetics
                     {
                         if (seg1.Crosses(seg2))
                         {
-                            initialScore += crossPenalty;
+                            initialScore += Config.crossPenalty;
                         }
                     }));
                 }
@@ -192,11 +89,11 @@ namespace Genetics
 
                     if (atomsOutside > 0)
                     {
-                        initialScore += atomsOutside * pathOutsideBoardPenaltyWeight;
+                        initialScore += atomsOutside * Config.pathOutsideBoardPenaltyWeight;
                         if (firstTimeOutside)
                         {
                             firstTimeOutside = false;
-                            initialScore += pathOutsideBoardPenalty;
+                            initialScore += Config.pathOutsideBoardPenalty;
                         }
                     }
                 }
@@ -219,16 +116,39 @@ namespace Genetics
             int pathIndex = rng.Next() % Paths.Count;
             int segmentIndex = rng.Next() % Paths[pathIndex].Segments.Count;
             Direction direction = (Direction)(rng.Next() % 4);
-            int pivot = rng.Next() % (Paths[pathIndex].Segments[segmentIndex].Length);
+            int pivot1 = rng.Next() % Math.Max(Paths[pathIndex].Segments[segmentIndex].Length, 1);
+            int pivot2 = rng.Next() % Math.Max(Paths[pathIndex].Segments[segmentIndex].Length, 1);
             int divideSegmentIndex = rng.Next() % 2;
             int offset = 1;
-            offset = rng.NextDouble() > 0.80 ? 2 : offset;
-            offset = rng.NextDouble() > 0.90 ? 3 : offset;
-            offset = rng.NextDouble() > 0.95 ? 4 : offset;
-            offset = rng.NextDouble() > 0.99 ? 5 : offset;
+            offset = rng.NextDouble() > 0.70 ? 2 : offset;
+            offset = rng.NextDouble() > 0.78 ? 3 : offset;
+            offset = rng.NextDouble() > 0.84 ? 4 : offset;
+            offset = rng.NextDouble() > 0.88 ? 5 : offset;
+            if (rng.NextDouble() > 0.91)
+            {
+                if (direction == Direction.Up || direction == Direction.Down)
+                {
+                    offset = rng.Next() % (Math.Max(Problem.Dimensions.Y - 6, 1) + 6);
+                }
+                else
+                {
+                    offset = rng.Next() % (Math.Max(Problem.Dimensions.X - 6, 1) + 6);
+                }
+            }
 
-
-            MutateB(pathIndex, segmentIndex, direction, pivot, divideSegmentIndex, offset);
+            if (rng.NextDouble() < 0.4)
+            {
+                MutateA(pathIndex, segmentIndex, direction);
+            }
+            else if (rng.NextDouble() < 0.8)
+            {
+                MutateB(pathIndex, segmentIndex, direction, pivot1, divideSegmentIndex, offset);
+            }
+            else if (pivot1 != pivot2)
+            {
+                MutateC(pathIndex, segmentIndex, direction, Math.Min(pivot1, pivot2), 
+                    Math.Max(pivot1, pivot2), offset);
+            }
         }
 
         public bool MutateA(int pathIndex, int segmentIndex, Direction direction)
@@ -276,6 +196,54 @@ namespace Genetics
                 workList.Insert(segmentIndex, newSegment);
                 workList.Insert(segmentIndex, updatedSegment);
                 segmentIndex += dividedSegmentIndex;
+            }
+
+            workList.Insert(segmentIndex, new Segment(direction, offset));
+            workList.Insert(segmentIndex + 2, new Segment(DirectionUtils.GetOpposite(direction), offset));
+
+            FixSegments(pathIndex);
+
+            return true;
+        }
+
+        public bool MutateC(int pathIndex, int segmentIndex, Direction direction, int pivotA, int pivotB, int offset = 1)
+        {
+            #region InitialConditions
+            if (pathIndex < 0 || pathIndex >= Paths.Count)
+            {
+                return false;
+            }
+
+            if (segmentIndex < 0 || segmentIndex >= Paths[pathIndex].Segments.Count)
+            {
+                return false;
+            }
+
+            Segment s = Paths[pathIndex].Segments[segmentIndex];
+            if (pivotA < 0 || pivotA > s.Length || pivotB < 0 || pivotB > s.Length)
+            {
+                return false;
+            }
+            if (DirectionUtils.Parallel(s.Direction, direction))
+            {
+                return false;
+            }
+            #endregion
+
+            List<Segment> workList = Paths[pathIndex].Segments;
+
+            // Divide into two segments if necessary
+            if (pivotA > 0 && pivotA < workList[segmentIndex].Length && pivotB > 0 && pivotB < workList[segmentIndex].Length && pivotA < pivotB)
+            {
+                Segment segment1 = new Segment(workList[segmentIndex].Direction, pivotA);
+                Segment segment2 = new Segment(workList[segmentIndex].Direction, pivotB - pivotA);
+                Segment segment3 =
+                    new Segment(workList[segmentIndex].Direction, workList[segmentIndex].Length - pivotB);
+                workList.RemoveAt(segmentIndex);
+                workList.Insert(segmentIndex, segment3);
+                workList.Insert(segmentIndex, segment2);
+                workList.Insert(segmentIndex, segment1);
+                segmentIndex += 1;
             }
 
             workList.Insert(segmentIndex, new Segment(direction, offset));
@@ -353,7 +321,7 @@ namespace Genetics
             Random rng = UniversalRandom.Rng;
             List<Individual> temp = new List<Individual>(population);
             var result = temp.OrderBy(ind => rng.Next())
-                .Take(tournamentSize)
+                .Take(Config.tournamentSize)
                 .OrderBy(ind => ind.Penalty)
                 .First();
 
@@ -365,7 +333,7 @@ namespace Genetics
             Random rng = UniversalRandom.Rng;
             float sum = population.Sum(i => i.Score);
             float aggregate = 0;
-            float shot = (float)rng.NextDouble() * sum;
+            double shot = rng.NextDouble() * sum;
 
             foreach (var individual in population)
             {

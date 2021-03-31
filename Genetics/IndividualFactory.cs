@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using Genetics.StructureDefinitions;
 
 namespace Genetics
 {
     public abstract class IndividualFactory
     {
-        public static int Seed { get; set; } = 3333;
-
         public static List<Individual> GenerateByConnectingPoints(Problem problem, int resultCount)
         {
             if (resultCount < 1)
@@ -16,7 +15,7 @@ namespace Genetics
             }
 
             var results = new List<Individual>();
-            var rng = new Random(Seed);
+            var rng = UniversalRandom.Rng;
 
             for (int i = 0; i < resultCount; i++)
             {
@@ -54,7 +53,21 @@ namespace Genetics
                 results.Add(result);
             }
 
+            results.ForEach(ind =>
+            {
+                ind.Mutate();
+                ind.Mutate();
+                ind.Mutate();
+                ind.Mutate();
+            });
             return results;
+        }
+
+        public static List<Individual> GenerateByPickingBest(Problem problem, int resultCount)
+        {
+            List<Individual> result = GenerateByConnectingPoints(problem, 1000000);
+            result.ForEach(ind => ind.Penalty = ind.Evaluate());
+            return result.OrderBy(ind => ind.Penalty).Take(resultCount).ToList();
         }
     }
 }

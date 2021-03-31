@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Genetics.StructureDefinitions;
 
 namespace Genetics
 {
     class GeneticAlgorithm
     {
         public Problem Problem { get; set; }
-        public int PopulationSize { get; set; }
-        public int GenerationCount { get; set; }
-        public float CrossProbability { get; set; }
-        public float MutationProbability { get; set; }
-        public int Seed { get; set; } = 3333;
 
         public Func<Problem, int, List<Individual>> InitFactoryMethod { get; set; }
         public Action<int, List<Individual>> OnIterationFinished { get; set; } = (_,__) => { };
@@ -19,29 +15,28 @@ namespace Genetics
         private int generationIndex = 0;
         private List<Individual> population;
 
-        public void Run()
+        public Individual Run()
         {
-            Random rng = new Random(Seed);
+            Random rng = UniversalRandom.Rng;
 
             generationIndex = 0;
-            population = InitFactoryMethod(Problem, PopulationSize);
-            population.ForEach(ind => ind.Mutate());
+            population = InitFactoryMethod(Problem, Config.populationSize);
             population.ForEach(i => i.Penalty = i.Evaluate());
             BulkEvaluate();
 
             OnIterationFinished(generationIndex, population);
 
-            while (generationIndex < GenerationCount)
+            while (generationIndex < Config.generationCount)
             {
                 List<Individual> newPopulation = new List<Individual>();
 
-                while (newPopulation.Count < PopulationSize)
+                while (newPopulation.Count < Config.populationSize)
                 {
-                    Individual individual1 = Individual.Select(population, SelectionType.Tournament);
-                    Individual individual2 = Individual.Select(population, SelectionType.Tournament);
-                    Individual newIndividual = rng.NextDouble() < CrossProbability ? Individual.Cross(individual1, individual2) : individual1.Copy();
+                    Individual individual1 = Individual.Select(population, Config.selectionType);
+                    Individual individual2 = Individual.Select(population, Config.selectionType);
+                    Individual newIndividual = rng.NextDouble() < Config.crossProbability ? Individual.Cross(individual1, individual2) : individual1.Copy();
 
-                    if (rng.NextDouble() < MutationProbability)
+                    if (rng.NextDouble() < Config.mutationProbability)
                     {
                         newIndividual.Mutate();
                     }
@@ -56,6 +51,10 @@ namespace Genetics
                 generationIndex++;
                 OnIterationFinished(generationIndex, population);
             }
+
+            float minPenalty = population.Min(i => i.Penalty);
+            Individual best = population.First(i => i.Penalty == minPenalty);
+            return best;
         }
 
         private void BulkEvaluate()
