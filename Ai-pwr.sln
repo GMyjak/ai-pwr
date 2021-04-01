@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Genetics", "Genetics\Genetics.csproj", "{4A5B1A71-A51E-422D-812B-CC2F4AF65669}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Genetics", "Genetics\Genetics.csproj", "{4A5B1A71-A51E-422D-812B-CC2F4AF65669}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSP", "CSP\CSP.csproj", "{148A99FF-D1E4-470C-BECA-07C5B39220F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{4A5B1A71-A51E-422D-812B-CC2F4AF65669}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4A5B1A71-A51E-422D-812B-CC2F4AF65669}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4A5B1A71-A51E-422D-812B-CC2F4AF65669}.Release|Any CPU.Build.0 = Release|Any CPU
+		{148A99FF-D1E4-470C-BECA-07C5B39220F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{148A99FF-D1E4-470C-BECA-07C5B39220F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{148A99FF-D1E4-470C-BECA-07C5B39220F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{148A99FF-D1E4-470C-BECA-07C5B39220F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
