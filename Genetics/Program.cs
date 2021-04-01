@@ -22,47 +22,49 @@ namespace Genetics
         {
             UniversalRandom.Seed = new Random().Next();
 
-            Config.Reset();
-            Console.WriteLine("P1");
-            TestPopulationSize(p1);
-            Console.WriteLine("P2");
-            TestPopulationSize(p2);
-            Console.WriteLine("P3");
-            TestPopulationSize(p3);
+            // TODO uncomment segments to 
 
-            Config.Reset();
-            Console.WriteLine("P1");
-            TestMutationProb(p1);
-            Console.WriteLine("P2");
-            TestMutationProb(p2);
-            Console.WriteLine("P3");
-            TestMutationProb(p3);
+            //Config.Reset();
+            //Console.WriteLine("P1");
+            //TestPopulationSize(p1);
+            //Console.WriteLine("P2");
+            //TestPopulationSize(p2);
+            //Console.WriteLine("P3");
+            //TestPopulationSize(p3);
 
-            Config.Reset();
-            Console.WriteLine("P1");
-            TestCrossProb(p1);
-            Console.WriteLine("P2");
-            TestCrossProb(p2);
-            Console.WriteLine("P3");
-            TestCrossProb(p3);
+            //Config.Reset();
+            //Console.WriteLine("P1");
+            //TestMutationProb(p1);
+            //Console.WriteLine("P2");
+            //TestMutationProb(p2);
+            //Console.WriteLine("P3");
+            //TestMutationProb(p3);
 
-            Config.Reset();
-            Console.WriteLine("P1");
-            TestSelectionType(p1);
-            Console.WriteLine("P2");
-            TestSelectionType(p2);
-            Console.WriteLine("P3");
-            TestSelectionType(p3);
+            //Config.Reset();
+            //Console.WriteLine("P1");
+            //TestCrossProb(p1);
+            //Console.WriteLine("P2");
+            //TestCrossProb(p2);
+            //Console.WriteLine("P3");
+            //TestCrossProb(p3);
 
-            Config.Reset();
-            TestRandomMethod(p1);
-            TestRandomMethod(p2);
-            TestRandomMethod(p3);
+            //Config.Reset();
+            //Console.WriteLine("P1");
+            //TestSelectionType(p1);
+            //Console.WriteLine("P2");
+            //TestSelectionType(p2);
+            //Console.WriteLine("P3");
+            //TestSelectionType(p3);
 
-            Config.Reset();
-            TestGA(p1);
-            TestGA(p2);
-            TestGA(p3);
+            //Config.Reset();
+            //TestRandomMethod(p1);
+            //TestRandomMethod(p2);
+            //TestRandomMethod(p3);
+
+            //Config.Reset();
+            //TestGA(p1);
+            //TestGA(p2);
+            //TestGA(p3);
         }
 
         static void TestGA(Problem p)
