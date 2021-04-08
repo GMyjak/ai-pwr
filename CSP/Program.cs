@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using CSP.EinsteinRiddle;
 
 namespace CSP
 {
@@ -6,7 +8,15 @@ namespace CSP
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var xd = Permutation.GetAllPermutations();
+            foreach (var perm in xd)
+            {
+                foreach (var i in perm.Values)
+                {
+                    Console.Write(i + " ");
+                }   
+                Console.WriteLine();
+            }
         }
     }
 }

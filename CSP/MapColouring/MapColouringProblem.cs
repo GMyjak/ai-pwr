@@ -9,7 +9,7 @@ namespace CSP
     {
         public static void GenerateProblemInstance(int x, int y)
         {
-            // PIERDOLE TE STUDIA
+            
         }
     }
 }
