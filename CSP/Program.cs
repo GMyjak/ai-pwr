@@ -7,17 +7,16 @@ namespace CSP
     {
         static void Main(string[] args)
         {
+            int solutionCount = 0;
             EinsteinRiddleNaPale riddle = new EinsteinRiddleNaPale();
-            var xd = riddle.RunAlgo();
-
-            foreach (var perm in xd)
+            riddle.OnSolutionFound += (xd) =>
             {
-                foreach (var i in perm.Values)
-                {
-                    Console.Write(i + " ");
-                }
-                Console.WriteLine();
-            }
+                solutionCount++;
+                
+                EinsteinRiddleNaPale.DisplaySolution(xd);
+            };
+            riddle.RunAlgo();
+            Console.WriteLine("Solutions: " + solutionCount);
         }
     }
 }

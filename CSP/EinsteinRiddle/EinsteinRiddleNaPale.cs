@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace CSP.EinsteinRiddle
 {
@@ -45,21 +44,22 @@ namespace CSP.EinsteinRiddle
         private List<Func<bool>> constraints;
         private List<Variable> variables;
 
-        public List<Permutation> RunAlgo()
+        public Action<List<Permutation>> OnSolutionFound { get; set; } = (_) => { };
+
+        public void RunAlgo()
         {
             DefineVariables();
             DefineConstraints();
 
             FindSolution(0);
-
-            return variables.Select(v => v.Current).ToList();
         }
 
-        bool FindSolution(int variableIndex)
+        private void FindSolution(int variableIndex)
         {
             if (variableIndex == variables.Count)
             {
-                return true;
+                OnSolutionFound?.Invoke(variables.Select(v => v.Current).ToList());
+                return;
             }
 
             foreach (var permutation in variables[variableIndex].Domain)
@@ -67,18 +67,16 @@ namespace CSP.EinsteinRiddle
                 variables[variableIndex].Current = permutation;
                 if (constraints.All(con => con.Invoke()))
                 {
-                    return FindSolution(variableIndex + 1);
+                    FindSolution(variableIndex + 1);
                 }
                 else
                 {
                     variables[variableIndex].Current = null;
                 }
             }
-
-            return false;
         }
 
-        public void DefineVariables()
+        private void DefineVariables()
         {
             variables = new List<Variable>();
 
@@ -92,22 +90,15 @@ namespace CSP.EinsteinRiddle
             }
         }
 
-        public void DefineConstraints()
+        private void DefineConstraints()
         {
             constraints = new List<Func<bool>>();
 
             // R1
-            constraints.Add(() =>
-            {
-                return variables[0].Current == null || variables[0].Current.Values[0] == 1;
-            });
+            constraints.Add(GenerateUnary(0, 1, 0));
 
             // R2
-            constraints.Add(() =>
-            {
-                return variables[0].Current == null || variables[1].Current == null ||
-                       Array.IndexOf(variables[0].Current.Values, 2) == Array.IndexOf(variables[1].Current.Values, 1);
-            });
+            constraints.Add(GenerateBinary(0, 2, 1, 1));
 
             // R3
             constraints.Add(() =>
@@ -117,18 +108,180 @@ namespace CSP.EinsteinRiddle
             });
 
             // R4
-            constraints.Add(() =>
-            {
-                return variables[0].Current == null || variables[3].Current == null ||
-                       Array.IndexOf(variables[0].Current.Values, 3) == Array.IndexOf(variables[3].Current.Values, 1);
-            });
+            constraints.Add(GenerateBinary(0, 3, 3, 1));
 
             // R5
-            constraints.Add(() =>
+            constraints.Add(GenerateBinaryNeighbour(2, 1, 4, 1));
+
+            // R6
+            constraints.Add(GenerateBinary(1, 4, 2, 4));
+
+            // R7
+            constraints.Add(GenerateBinary(0, 4, 2, 5));
+
+            // R8
+            constraints.Add(GenerateUnary(3, 2, 2));
+
+            // R9
+            constraints.Add(GenerateBinaryNeighbour(2, 1, 3, 3));
+
+            // R10
+            constraints.Add(GenerateBinary(2, 2, 4, 2));
+
+            // R11
+            constraints.Add(GenerateBinary(0, 5, 4, 3));
+
+            // R12
+            constraints.Add(GenerateBinaryNeighbour(0, 1, 1, 5));
+
+            // R13
+            constraints.Add(GenerateBinaryNeighbour(4, 4, 1, 4));
+
+            // R14
+            constraints.Add(GenerateBinary(2, 3, 3, 4));
+
+            // R15
+            constraints.Add(GenerateBinary(1, 2, 3, 5));
+        }
+
+        private Func<bool> GenerateUnary(int varId, int value, int index)
+        {
+            return () => variables[varId].Current == null || variables[varId].Current.Values[index] == value;
+        }
+
+        private Func<bool> GenerateBinary(int var1Id, int value1Id, int var2Id, int value2Id)
+        {
+            return () => variables[var1Id].Current == null || variables[var2Id].Current == null ||
+                         Array.IndexOf(variables[var1Id].Current.Values, value1Id) == Array.IndexOf(variables[var2Id].Current.Values, value2Id);
+        }
+
+        private Func<bool> GenerateBinaryNeighbour(int var1Id, int value1Id, int var2Id, int value2Id)
+        {
+            return () => variables[var1Id].Current == null || variables[var2Id].Current == null ||
+                   Math.Abs(Array.IndexOf(variables[var1Id].Current.Values, value1Id) - Array.IndexOf(variables[var2Id].Current.Values, value2Id)) == 1;
+        }
+
+        public static void DisplaySolution(List<Permutation> perms)
+        {
+            foreach (var value in perms[0].Values)
             {
-                return variables[2].Current == null || variables[4].Current == null || 
-                       Math.Abs(Array.IndexOf(variables[2].Current.Values, 1) - Array.IndexOf(variables[4].Current.Values, 1)) == 1;
-            });
+                switch (value)
+                {
+                    case 1:
+                        Console.Write("Norweg");
+                        break;
+                    case 2:
+                        Console.Write("Anglik");
+                        break;
+                    case 3:
+                        Console.Write("Duńczyk");
+                        break;
+                    case 4:
+                        Console.Write("Niemiec");
+                        break;
+                    case 5:
+                        Console.Write("Szwed");
+                        break;
+                }
+                Console.Write(" ");
+            }
+            Console.WriteLine();
+
+            foreach (var value in perms[1].Values)
+            {
+                switch (value)
+                {
+                    case 1:
+                        Console.Write("czerwony");
+                        break;
+                    case 2:
+                        Console.Write("zielony");
+                        break;
+                    case 3:
+                        Console.Write("biały");
+                        break;
+                    case 4:
+                        Console.Write("żólty");
+                        break;
+                    case 5:
+                        Console.Write("niebieski");
+                        break;
+                }
+                Console.Write(" ");
+            }
+            Console.WriteLine();
+
+            foreach (var value in perms[2].Values)
+            {
+                switch (value)
+                {
+                    case 1:
+                        Console.Write("light");
+                        break;
+                    case 2:
+                        Console.Write("bezfiltra");
+                        break;
+                    case 3:
+                        Console.Write("mentolowe");
+                        break;
+                    case 4:
+                        Console.Write("cygara");
+                        break;
+                    case 5:
+                        Console.Write("fajka");
+                        break;
+                }
+                Console.Write(" ");
+            }
+            Console.WriteLine();
+
+            foreach (var value in perms[3].Values)
+            {
+                switch (value)
+                {
+                    case 1:
+                        Console.Write("herbata");
+                        break;
+                    case 2:
+                        Console.Write("mleko");
+                        break;
+                    case 3:
+                        Console.Write("woda");
+                        break;
+                    case 4:
+                        Console.Write("piwo");
+                        break;
+                    case 5:
+                        Console.Write("kawa");
+                        break;
+                }
+                Console.Write(" ");
+            }
+            Console.WriteLine();
+
+            foreach (var value in perms[4].Values)
+            {
+                switch (value)
+                {
+                    case 1:
+                        Console.Write("kot");
+                        break;
+                    case 2:
+                        Console.Write("ptak");
+                        break;
+                    case 3:
+                        Console.Write("pies");
+                        break;
+                    case 4:
+                        Console.Write("koń");
+                        break;
+                    case 5:
+                        Console.Write("smok");
+                        break;
+                }
+                Console.Write(" ");
+            }
+            Console.WriteLine();
         }
     }
 
