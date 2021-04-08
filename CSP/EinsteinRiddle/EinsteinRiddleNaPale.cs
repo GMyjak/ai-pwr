@@ -42,20 +42,43 @@ namespace CSP.EinsteinRiddle
         // 4 - koń
         // 5 - smok
 
-
-
-
-
-
-        private List<Func<bool>> constraints = new List<Func<bool>>()
-        {
-            () => true,
-
-        };
+        private List<Func<bool>> constraints;
         private List<Variable> variables;
 
-
         public List<Permutation> RunAlgo()
+        {
+            DefineVariables();
+            DefineConstraints();
+
+            FindSolution(0);
+
+            return variables.Select(v => v.Current).ToList();
+        }
+
+        bool FindSolution(int variableIndex)
+        {
+            if (variableIndex == variables.Count)
+            {
+                return true;
+            }
+
+            foreach (var permutation in variables[variableIndex].Domain)
+            {
+                variables[variableIndex].Current = permutation;
+                if (constraints.All(con => con.Invoke()))
+                {
+                    return FindSolution(variableIndex + 1);
+                }
+                else
+                {
+                    variables[variableIndex].Current = null;
+                }
+            }
+
+            return false;
+        }
+
+        public void DefineVariables()
         {
             variables = new List<Variable>();
 
@@ -67,8 +90,45 @@ namespace CSP.EinsteinRiddle
                     Domain = Permutation.GetAllPermutations()
                 });
             }
+        }
 
-            return null;
+        public void DefineConstraints()
+        {
+            constraints = new List<Func<bool>>();
+
+            // R1
+            constraints.Add(() =>
+            {
+                return variables[0].Current == null || variables[0].Current.Values[0] == 1;
+            });
+
+            // R2
+            constraints.Add(() =>
+            {
+                return variables[0].Current == null || variables[1].Current == null ||
+                       Array.IndexOf(variables[0].Current.Values, 2) == Array.IndexOf(variables[1].Current.Values, 1);
+            });
+
+            // R3
+            constraints.Add(() =>
+            {
+                return variables[1].Current == null || Array.IndexOf(variables[1].Current.Values, 2) ==
+                    Array.IndexOf(variables[1].Current.Values, 3) - 1;
+            });
+
+            // R4
+            constraints.Add(() =>
+            {
+                return variables[0].Current == null || variables[3].Current == null ||
+                       Array.IndexOf(variables[0].Current.Values, 3) == Array.IndexOf(variables[3].Current.Values, 1);
+            });
+
+            // R5
+            constraints.Add(() =>
+            {
+                return variables[2].Current == null || variables[4].Current == null || 
+                       Math.Abs(Array.IndexOf(variables[2].Current.Values, 1) - Array.IndexOf(variables[4].Current.Values, 1)) == 1;
+            });
         }
     }
 
