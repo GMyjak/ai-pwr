@@ -37,7 +37,7 @@ namespace CSP.MapColouring
                 }
             }
 
-            for (int i = 0; i < 1000000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 Point randomPoint = cords[rng.Next(cords.Count)];
                 List<Point> connectionCandidates = cords

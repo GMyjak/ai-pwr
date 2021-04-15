@@ -1,13 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace CSP.Abstract
 {
-    class AbstractConstraintSatisfactionProblem<T>
+    public abstract class AbstractConstraintSatisfactionProblem<T> where T : class
     {
         public List<IVariable<T>> Variables { get; set; }
-        public IDomain<T> Domain { get; set; }
-        public List<IConstraint<T>> Constraints { get; set; }
+        public List<Constraint> Constraints { get; set; }
+        public Action<List<IVariable<T>>> OnSolutionFound { get; set; } = _ => { };
+
+        protected abstract void DefineVariables();
+        protected abstract void DefineConstraints();
+
+        public void RunBacktracking()
+        {
+            DefineVariables();
+            DefineConstraints();
+            FindSolutionByBacktracking(0);
+        }
+
+        protected void FindSolutionByBacktracking(int variableIndex)
+        {
+            if (variableIndex == Variables.Count)
+            {
+                OnSolutionFound?.Invoke(Variables);
+                return;
+            }
+
+            foreach (var val in Variables[variableIndex].Domain)
+            {
+                Variables[variableIndex].Current = val;
+                if (Constraints.All(con => con.Check.Invoke()))
+                {
+                    FindSolutionByBacktracking(variableIndex + 1);
+                }
+                else
+                {
+                    Variables[variableIndex].Current = null;
+                }
+            }
+        }
     }
 }
