@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using CSP.Abstract;
 
 namespace CSP.MapColouring
 {
-    class MapColouringNaPale
+    class MapColouringNaPale : AbstractConstraintSatisfactionProblem<int?>
     {
         // Kolory: 
         // 1 - czerwony
@@ -15,114 +15,148 @@ namespace CSP.MapColouring
         // 5 - fioletowy
         // 6 - pomarańczowy
 
-        public List<int> DomainTemplate { get; set; } = new List<int>() {1, 2, 3, 4};
+        public List<int?> DomainTemplate { get; set; } = new List<int?>() {1, 2, 3, 4};
+        public int X { get; set; }
+        public int Y { get; set; }
 
-        private List<Func<bool>> constraints;
-        private List<Variable> variables;
         private List<Connection> connections;
 
-        public Action<List<Variable>> OnSolutionFound { get; set; } = (_) => { };
-
-        public void GenerateInstance(int x, int y)
+        protected override void DefineVariables()
         {
             Random rng = new Random();
             connections = new List<Connection>();
 
             List<Point> cords = new List<Point>();
-            for (int i = 0; i < x; i++)
+            for (int i = 0; i < X; i++)
             {
-                for (int j = 0; j < y; j++)
+                for (int j = 0; j < Y; j++)
                 {
                     cords.Add(new Point(i, j));
                 }
             }
 
-            for (int i = 0; i < 10000; i++)
+            List<Connection> connectionCandidates = new List<Connection>();
+            for (int i = 0; i < cords.Count - 1; i++)
             {
-                Point randomPoint = cords[rng.Next(cords.Count)];
-                List<Point> connectionCandidates = cords
-                    .OrderBy(c => rng.Next()).ToList();
-                connectionCandidates = connectionCandidates
-                    .OrderBy(c => c.GetDistance(randomPoint)).ToList();
-
-                for (int j = 1; j < connectionCandidates.Count; j++)
+                for (int j = i + 1; j < cords.Count; j++)
                 {
-                    Connection candidateConnection = new Connection(randomPoint, connectionCandidates[j]);
-                    if (!connections.Any(c => Point.Crosses(candidateConnection.A, candidateConnection.B, c.A, c.B)))
-                    {
-                        connections.Add(candidateConnection);
-                        break;
-                    }
+                    Connection conn = new Connection(cords[i], cords[j]);
+                    connectionCandidates.Add(conn);
                 }
             }
 
-            // DEBUG
-            foreach (var connection in connections)
+            while (connectionCandidates.Count > 0)
             {
-                Console.WriteLine($"A: X{connection.A.X}Y{connection.A.Y}  B: X{connection.B.X}Y{connection.B.Y}");
+                List<Point> randomPointCandidates = new List<Point>();
+                connectionCandidates.ForEach(c =>
+                {
+                    if (!randomPointCandidates.Contains(c.A))
+                    {
+                        randomPointCandidates.Add(c.A);
+                    }
+                    if (!randomPointCandidates.Contains(c.B))
+                    {
+                        randomPointCandidates.Add(c.B);
+                    }
+                });
+
+                Point p = randomPointCandidates[rng.Next(randomPointCandidates.Count)];
+                Connection choice = connectionCandidates
+                    .Where(c => c.A == p || c.B == p)
+                    .OrderBy(c => c.A.GetDistance(c.B))
+                    .First();
+
+                connections.Add(choice);
+                connectionCandidates.Remove(choice);
+                connectionCandidates = connectionCandidates
+                    .Where(c => !Point.Crosses(choice.A, choice.B, c.A, c.B))
+                    .ToList();
             }
 
-            // Generate variables
-            variables = new List<Variable>();
+            foreach (var connection in connections)
+            {
+                Console.WriteLine($"A:({connection.A.X},{connection.A.Y}), B:({connection.B.X},{connection.B.Y})");
+            }
+
+            Variables = new List<IVariable<int?>>();
             foreach (var point in cords)
             {
-                variables.Add(new Variable()
+                Variables.Add(new Variable()
                 {
                     Cords = point,
-                    Domain = new List<int>(DomainTemplate),
+                    Domain = new List<int?>(DomainTemplate),
                     Current = null
                 });
             }
-            
-            // Generate constraints
-            constraints = new List<Func<bool>>();
+        }
+
+        protected override void DefineConstraints()
+        {
+            Constraints = new List<Constraint>();
             foreach (var connection in connections)
             {
-                constraints.Add(GenerateConstraint(connection, variables));
+                Constraints.Add(GenerateConstraint(connection));
             }
         }
 
-        private Func<bool> GenerateConstraint(Connection connection, List<Variable> variables)
-        {
-            Variable first = variables.First(v => v.Cords == connection.A);
-            Variable second = variables.First(v => v.Cords == connection.B);
+        //public void GenerateInstance(int x, int y)
+        //{
+        //    for (int i = 0; i < 10000; i++)
+        //    {
+        //        Point randomPoint = cords[rng.Next(cords.Count)];
+        //        List<Point> connectionCandidates = cords
+        //            .OrderBy(c => rng.Next()).ToList();
+        //        connectionCandidates = connectionCandidates
+        //            .OrderBy(c => c.GetDistance(randomPoint)).ToList();
 
-            return () => first.Current == null || second.Current == null || first.Current.Value != second.Current.Value;
-        }
+        //        for (int j = 1; j < connectionCandidates.Count; j++)
+        //        {
+        //            Connection candidateConnection = new Connection(randomPoint, connectionCandidates[j]);
+        //            if (!connections.Any(c => Point.Crosses(candidateConnection.A, candidateConnection.B, c.A, c.B)))
+        //            {
+        //                connections.Add(candidateConnection);
+        //                break;
+        //            }
+        //        }
+        //    }
 
-        public void RunAlgo()
-        {
-            Console.WriteLine(constraints.Count);
-            FindSolution(0);
-        }
+        //    // Generate variables
+        //    variables = new List<Variable>();
+        //    foreach (var point in cords)
+        //    {
+        //        variables.Add(new Variable()
+        //        {
+        //            Cords = point,
+        //            Domain = new List<int>(DomainTemplate),
+        //            Current = null
+        //        });
+        //    }
 
-        private void FindSolution(int variableIndex)
+        //    // Generate constraints
+        //    Constraints = new List<Constraint>();
+        //    foreach (var connection in connections)
+        //    {
+        //        Constraints.Add(GenerateConstraint(connection, Variables));
+        //    }
+        //}
+
+        private BinaryConstraint<int?> GenerateConstraint(Connection connection)
         {
-            if (variableIndex == variables.Count)
+            Variable first = Variables.First(v => ((Variable)v).Cords == connection.A) as Variable;
+            Variable second = Variables.First(v => ((Variable)v).Cords == connection.B) as Variable;
+            return new BinaryConstraint<int?>()
             {
-                OnSolutionFound?.Invoke(variables);
-                return;
-            }
-
-            foreach (var permutation in variables[variableIndex].Domain)
-            {
-                variables[variableIndex].Current = permutation;
-                if (constraints.All(con => con.Invoke()))
-                {
-                    FindSolution(variableIndex + 1);
-                }
-                else
-                {
-                    variables[variableIndex].Current = null;
-                }
-            }
+                VariableA = first,
+                VariableB = second,
+                Check = () => first.Current == null || second.Current == null || first.Current.Value != second.Current.Value
+            };
         }
     }
 
-    class Variable // Country
+    class Variable : IVariable<int?>
     {
         public int? Current { get; set; }
-        public List<int> Domain { get; set; }
+        public List<int?> Domain { get; set; }
         
         public Point Cords { get; set; }
     }
@@ -248,36 +282,5 @@ namespace CSP.MapColouring
             A = a;
             B = b;
         }
-
-        //public bool Crosses(Connection other)
-        //{
-        //    // https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
-            
-        //    // y = a1 * x + b1
-        //    // y = a2 * x + b2
-            
-        //    // 1. Calculate a1, a2, b1, b2
-        //    // A.Y = a1 * A.X + b1
-        //    // B.Y = a1 * B.X + b1
-        //    // b1 = A.Y - a1 * A.X
-        //    // a1 * B.X = B.Y - A.Y + a1 * A.X
-        //    // a1 * (B.X - A.X) = B.Y - A.Y
-        //    // a1 = (B.Y - A.Y) / (B.X - A.X)
-
-        //    float a1 = (B.Y - A.Y) / (B.X - A.X);
-        //    float b1 = A.Y - a1 * A.X;
-        //    float a2 = (other.B.Y - other.A.Y) / (other.B.X - other.A.X);
-        //    float b2 = other.A.Y - a2 * other.A.X;
-
-        //    // 2. Calculate
-        //    // a1 * x - a2 * x = b2 - b1
-        //    // x = (b2 - b1) / (a1 - a2)
-        //    // y = a1 * x + b1
-        //    float x = (b2 - b1) / (a1 - a2);
-        //    float y = a1 * x + b1;
-            
-
-        //    return false;
-        //}
     }
 }

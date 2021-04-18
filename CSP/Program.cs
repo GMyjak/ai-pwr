@@ -8,8 +8,8 @@ namespace CSP
     {
         static void Main(string[] args)
         {
-            TestEinstein();
-            //TestMCP();
+            //TestEinstein();
+            TestMCP();
         }
 
         static void TestEinstein()
@@ -30,12 +30,13 @@ namespace CSP
         {
             int solutionCount = 0;
             MapColouringNaPale riddle = new MapColouringNaPale();
-            riddle.GenerateInstance(3,3);
+            riddle.X = 3;
+            riddle.Y = 3;
             riddle.OnSolutionFound += (xd) =>
             {
                 solutionCount++;
             };
-            riddle.RunAlgo();
+            riddle.RunBacktracking();
             Console.WriteLine("Solutions: " + solutionCount);
         }
 
@@ -43,15 +44,6 @@ namespace CSP
         // Generowanie kozackiej bitmapki
 
         // TODO NAPRAWIĆ GENEROWANIE
-        // 1. wygeneruj wszystkie możliwe connections między cords
-        // 2. wybierz losowy punkt z puli punktów we wszystkich conn
-        // 3. wybierz losowy najkrótszy conn który zawiera wylosowany punkt i dodaj conn do listy conn
-        // 4. wyrzuć wszystkie conn które krzyżują się z wybranym conn
-        // 5. Rób 2,3,4 dopóki lista wszystkich conn nie jest pusta
-
-        // TODO DOPASOWAĆ WSZYSTKO DO ABSTRAKCJI
-        // 1. Zmienić return type (callback) w Einstein Riddle
-        // 2. Opakować constraint w obiekt z referencjami na zmienne
-        // 3. Zmienić abstrakcyjny framework i zaimplementować w Einstein i MCP
+        // bug: niepoprawna detekcja kolizji dla pionowych linii?
     }
 }

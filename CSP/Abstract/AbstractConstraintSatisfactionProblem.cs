@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace CSP.Abstract
 {
-    public abstract class AbstractConstraintSatisfactionProblem<T> where T : class
+    public abstract class AbstractConstraintSatisfactionProblem<T>
     {
         public List<IVariable<T>> Variables { get; set; }
         public List<Constraint> Constraints { get; set; }
@@ -37,7 +37,7 @@ namespace CSP.Abstract
                 }
                 else
                 {
-                    Variables[variableIndex].Current = null;
+                    Variables[variableIndex].Current = default;
                 }
             }
         }
