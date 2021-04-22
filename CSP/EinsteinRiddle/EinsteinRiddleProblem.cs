@@ -274,6 +274,7 @@ namespace CSP.EinsteinRiddle
     {
         public Permutation Current { get; set; }
         public List<Permutation> Domain { get; set; }
+        public bool[] DomainMask { get; set; }
     }
 
     public class Permutation

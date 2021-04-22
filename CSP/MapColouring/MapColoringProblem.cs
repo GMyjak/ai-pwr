@@ -5,7 +5,7 @@ using CSP.Abstract;
 
 namespace CSP.MapColouring
 {
-    class MapColouringNaPale : AbstractConstraintSatisfactionProblem<int?>
+    class MapColoringProblem : AbstractConstraintSatisfactionProblem<int?>
     {
         // Kolory: 
         // 1 - czerwony
@@ -15,16 +15,17 @@ namespace CSP.MapColouring
         // 5 - fioletowy
         // 6 - pomarańczowy
 
-        public List<int?> DomainTemplate { get; set; } = new List<int?>() {1, 2, 3, 4};
+        public List<int?> DomainTemplate { get; set; } = new List<int?>() { 1, 2, 3, 4 };
         public int X { get; set; }
         public int Y { get; set; }
+        public float SizePercent { get; set; } = 0.7f;
 
-        private List<Connection> connections;
+        public List<Connection> Connections { get; private set; }
 
         protected override void DefineVariables()
         {
             Random rng = new Random();
-            connections = new List<Connection>();
+            Connections = new List<Connection>();
 
             List<Point> cords = new List<Point>();
             for (int i = 0; i < X; i++)
@@ -34,6 +35,9 @@ namespace CSP.MapColouring
                     cords.Add(new Point(i, j));
                 }
             }
+
+            // mod
+            cords = cords.OrderBy(c => rng.Next()).Take((int)(X * Y * SizePercent)).ToList();
 
             List<Connection> connectionCandidates = new List<Connection>();
             for (int i = 0; i < cords.Count - 1; i++)
@@ -47,6 +51,7 @@ namespace CSP.MapColouring
 
             while (connectionCandidates.Count > 0)
             {
+                connectionCandidates = connectionCandidates.OrderBy(c => rng.Next()).ToList();
                 List<Point> randomPointCandidates = new List<Point>();
                 connectionCandidates.ForEach(c =>
                 {
@@ -66,16 +71,11 @@ namespace CSP.MapColouring
                     .OrderBy(c => c.A.GetDistance(c.B))
                     .First();
 
-                connections.Add(choice);
+                Connections.Add(choice);
                 connectionCandidates.Remove(choice);
                 connectionCandidates = connectionCandidates
                     .Where(c => !Point.Crosses(choice.A, choice.B, c.A, c.B))
                     .ToList();
-            }
-
-            foreach (var connection in connections)
-            {
-                Console.WriteLine($"A:({connection.A.X},{connection.A.Y}), B:({connection.B.X},{connection.B.Y})");
             }
 
             Variables = new List<IVariable<int?>>();
@@ -93,52 +93,11 @@ namespace CSP.MapColouring
         protected override void DefineConstraints()
         {
             Constraints = new List<Constraint>();
-            foreach (var connection in connections)
+            foreach (var connection in Connections)
             {
                 Constraints.Add(GenerateConstraint(connection));
             }
         }
-
-        //public void GenerateInstance(int x, int y)
-        //{
-        //    for (int i = 0; i < 10000; i++)
-        //    {
-        //        Point randomPoint = cords[rng.Next(cords.Count)];
-        //        List<Point> connectionCandidates = cords
-        //            .OrderBy(c => rng.Next()).ToList();
-        //        connectionCandidates = connectionCandidates
-        //            .OrderBy(c => c.GetDistance(randomPoint)).ToList();
-
-        //        for (int j = 1; j < connectionCandidates.Count; j++)
-        //        {
-        //            Connection candidateConnection = new Connection(randomPoint, connectionCandidates[j]);
-        //            if (!connections.Any(c => Point.Crosses(candidateConnection.A, candidateConnection.B, c.A, c.B)))
-        //            {
-        //                connections.Add(candidateConnection);
-        //                break;
-        //            }
-        //        }
-        //    }
-
-        //    // Generate variables
-        //    variables = new List<Variable>();
-        //    foreach (var point in cords)
-        //    {
-        //        variables.Add(new Variable()
-        //        {
-        //            Cords = point,
-        //            Domain = new List<int>(DomainTemplate),
-        //            Current = null
-        //        });
-        //    }
-
-        //    // Generate constraints
-        //    Constraints = new List<Constraint>();
-        //    foreach (var connection in connections)
-        //    {
-        //        Constraints.Add(GenerateConstraint(connection, Variables));
-        //    }
-        //}
 
         private BinaryConstraint<int?> GenerateConstraint(Connection connection)
         {
@@ -153,15 +112,16 @@ namespace CSP.MapColouring
         }
     }
 
-    class Variable : IVariable<int?>
+    public class Variable : IVariable<int?>
     {
         public int? Current { get; set; }
         public List<int?> Domain { get; set; }
-        
+        public bool[] DomainMask { get; set; }
+
         public Point Cords { get; set; }
     }
 
-    class Point
+    public class Point
     {
         public int X { get; set; }
         public int Y { get; set; }
@@ -230,17 +190,25 @@ namespace CSP.MapColouring
                 Point deltaA = new Point(otherA.X - common.X, otherA.Y - common.Y);
                 Point deltaB = new Point(otherB.X - common.X, otherB.Y - common.Y);
 
-                if (deltaA.Y == 0 && deltaB.Y == 0)
+                if (deltaA.X == 0 && deltaB.X == 0)
                 {
-                    return deltaA.X * deltaB.X > 0 ? true : false;
+                    return deltaA.Y * deltaB.Y > 0 ? true : false;
                 }
-                else if (deltaA.Y == 0 || deltaB.Y == 0)
+                //else if (deltaA.Y == 0 && deltaB.Y == 0)
+                //{
+                //    return deltaA.X * deltaB.X > 0 ? true : false;
+                //}
+                else if (deltaA.X == 0 || deltaB.X == 0)
                 {
                     return false;
                 }
+                //else if (deltaA.Y == 0 || deltaB.Y == 0)
+                //{
+                //    return false;
+                //}
                 else
                 {
-                    return ((float) deltaA.X / deltaA.Y) == ((float) deltaB.X / deltaB.Y);
+                    return ((float)deltaA.Y / deltaA.X) == ((float)deltaB.Y / deltaB.X);
                 }
             }
 
