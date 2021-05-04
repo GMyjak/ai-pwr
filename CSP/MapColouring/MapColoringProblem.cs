@@ -18,13 +18,15 @@ namespace CSP.MapColouring
         public List<int?> DomainTemplate { get; set; } = new List<int?>() { 1, 2, 3, 4 };
         public int X { get; set; }
         public int Y { get; set; }
-        public float SizePercent { get; set; } = 0.7f;
+        public float SizePercent { get; set; } = 0.6f;
+        public int Seed { get; set; }
 
         public List<Connection> Connections { get; private set; }
 
         protected override void DefineVariables()
         {
-            Random rng = new Random();
+            var rng = Seed != 0 ? new Random(Seed) : new Random();
+                
             Connections = new List<Connection>();
 
             List<Point> cords = new List<Point>();
@@ -194,21 +196,25 @@ namespace CSP.MapColouring
                 {
                     return deltaA.Y * deltaB.Y > 0 ? true : false;
                 }
-                //else if (deltaA.Y == 0 && deltaB.Y == 0)
-                //{
-                //    return deltaA.X * deltaB.X > 0 ? true : false;
-                //}
+                else if (deltaA.Y == 0 && deltaB.Y == 0)
+                {
+                    return deltaA.X * deltaB.X > 0 ? true : false;
+                }
                 else if (deltaA.X == 0 || deltaB.X == 0)
                 {
                     return false;
                 }
-                //else if (deltaA.Y == 0 || deltaB.Y == 0)
-                //{
-                //    return false;
-                //}
+                else if (deltaA.Y == 0 || deltaB.Y == 0)
+                {
+                    return false;
+                }
                 else
                 {
-                    return ((float)deltaA.Y / deltaA.X) == ((float)deltaB.Y / deltaB.X);
+                    // TODO BIG
+                    // TODO FUCKING
+                    // TODO TODO
+                    // TODO CHECK IF THIS IS SAFE!!!
+                    return false; //((float)deltaA.Y / deltaA.X) == ((float)deltaB.Y / deltaB.X);
                 }
             }
 

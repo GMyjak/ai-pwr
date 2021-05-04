@@ -73,6 +73,7 @@ namespace CSP.MapColouring
 
         public void Save(string path)
         {
+            path = "../../../MapColouring/" + path;
             if (bitmap == null)
             {
                 Draw();

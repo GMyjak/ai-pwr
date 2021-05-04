@@ -16,5 +16,7 @@ namespace CSP.Abstract
     {
         public IVariable<T> VariableA { get; set; }
         public IVariable<T> VariableB { get; set; }
+
+        //public Func<T, T, bool> CheckExplicit { get; set; }
     }
 }

@@ -1,5 +1,13 @@
 ﻿#define ENABLE_LOGS
 
+// Heuristics - only one will be used
+//#define H_DOM_SIZE
+//#define H_MCV
+#define H_LCV
+
+// Whether to use AC3 algo
+#define AC3
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +33,9 @@ namespace CSP.Abstract
 
         public void RunBacktracking()
         {
-            Console.WriteLine(Ac3());
+#if AC3
+            Ac3();
+#endif
             counter = 0;
             FindSolutionByBacktracking(0);
 #if ENABLE_LOGS
@@ -65,11 +75,6 @@ namespace CSP.Abstract
 
         // Pseudokod xDxD
         // https://en.wikipedia.org/wiki/AC-3_algorithm
-        public void RunAc3()
-        {
-            Ac3();
-        }
-
         protected bool Ac3()
         {
             //List<(IVariable<T>, IVariable<T>)> workList = new List<(IVariable<T>, IVariable<T>)>();
@@ -80,6 +85,13 @@ namespace CSP.Abstract
                 if (cast != null)
                 {
                     workList.Add(cast);
+                    BinaryConstraint<T> reverseConstraint = new BinaryConstraint<T>()
+                    {
+                        Check = cast.Check,
+                        VariableA = cast.VariableB,
+                        VariableB = cast.VariableA
+                    };
+                    workList.Add(reverseConstraint);
                 }
             }
 
@@ -89,7 +101,6 @@ namespace CSP.Abstract
                 workList.RemoveAt(0);
                 if (ArcReduce(arc))
                 {
-                    Console.WriteLine("XDDDD");
                     if (arc.VariableA.Domain.Count == 0)
                     {
                         return false;
@@ -112,6 +123,13 @@ namespace CSP.Abstract
                             if (other != null && other != arc.VariableB)
                             {
                                 workList.Add(cast);
+                                BinaryConstraint<T> reverseConstraint = new BinaryConstraint<T>()
+                                {
+                                    Check = cast.Check,
+                                    VariableA = cast.VariableB,
+                                    VariableB = cast.VariableA
+                                };
+                                workList.Add(reverseConstraint);
                             }
                         });
                     }
@@ -145,6 +163,7 @@ namespace CSP.Abstract
 
                 if (!satisfactionFound)
                 {
+                    Console.WriteLine("Reduced xd");
                     x.Domain.Remove(valueX);
                     change = true;
                 }
@@ -159,17 +178,10 @@ namespace CSP.Abstract
 
         public void RunForwardChecking()
         {
-            counter = 0;
-            FindSolutionForwardChecking(0, null);
-#if ENABLE_LOGS
-            Console.WriteLine(counter);
+#if AC3
+            Ac3();
 #endif
-            counter = 0;
-        }
 
-        // int => indeks variabla, int - indeks zmiennej z dziedziny
-        protected bool FindSolutionForwardChecking(int variableIndex, List<(int,int)> prunedValues)
-        {
             foreach (var variable in Variables)
             {
                 variable.DomainMask = new bool[variable.Domain.Count];
@@ -179,18 +191,30 @@ namespace CSP.Abstract
                 }
             }
 
-            if (variableIndex == Variables.Count)
-            {
-                OnSolutionFound?.Invoke(Variables);
-                return true;
-            }
+            counter = 0;
+            FindSolutionForwardChecking(0);
+#if ENABLE_LOGS
+            Console.WriteLine(counter);
+#endif
+            counter = 0;
+        }
 
-            foreach (var val in Variables[variableIndex].Domain)
+        // int => indeks variabla, int - indeks wartosci z dziedziny
+        protected bool FindSolutionForwardChecking(int variableIndex)
+        {
+            var values = Variables[variableIndex].MaskedDomain;
+            foreach (var val in values)
             {
                 Variables[variableIndex].Current = val;
                 counter++;
                 if (Constraints.All(con => con.Check.Invoke()))
                 {
+                    if (Variables.All(v => v.Current != null))
+                    {
+                        OnSolutionFound?.Invoke(Variables);
+                        return true;
+                    }
+
                     // prune
                     var neighborVariables = new List<(IVariable<T>, BinaryConstraint<T>)>();
                     Constraints.ForEach(c =>
@@ -206,24 +230,27 @@ namespace CSP.Abstract
                             neighborVariables.Add((cast.VariableA, cast));
                         }
                     });
+                    neighborVariables = neighborVariables.Where(v => v.Item1.Current == null).ToList();
 
-                    var prunedValuesForNextCall = new List<(int,int)>();
+                    var prunedValues = new List<(int,int)>();
                     foreach (var pair in neighborVariables)
                     {
                         int idx = Variables.IndexOf(pair.Item1);
-                        if (pair.Item1.Current == null)
+                        var variable = Variables[idx];
+                        if (variable.Current == null)
                         {
-                            for (int i = 0; i < pair.Item1.Domain.Count; i++)
+                            for (int i = 0; i < variable.Domain.Count; i++)
                             {
-                                if (!pair.Item1.DomainMask[i])
+                                if (variable.DomainMask[i])
                                 {
-                                    pair.Item1.Current = pair.Item1.Domain[i];
-                                    counter++;
+                                    variable.Current = variable.Domain[i];
+                                    //counter++;
                                     if (!pair.Item2.Check())
                                     {
-                                        pair.Item1.DomainMask[i] = false;
-                                        prunedValuesForNextCall.Add((idx, i));
+                                        variable.DomainMask[i] = false;
+                                        prunedValues.Add((idx, i));
                                     }
+                                    variable.Current = default;
                                 }
                             }
 
@@ -232,27 +259,78 @@ namespace CSP.Abstract
                     }
                     // end of prune
 
-                    var solutionFound = FindSolutionForwardChecking(variableIndex + 1, prunedValuesForNextCall);
+                    // HEURISTICS
+                    int newIndex;
+#if H_DOM_SIZE
+                    var chosenVar = Variables
+                        .Where(v => v.Current == null)
+                        .OrderBy(v => v.MaskedDomain.Count)
+                        .First();
+                    newIndex = Variables.IndexOf(chosenVar);
+#elif H_MCV
+                    var chosenVar = Variables
+                        .Where(v => v.Current == null)
+                        .OrderBy(v => Constraints.Sum(c =>
+                        {
+                            var cast = c as BinaryConstraint<T>;
+                            if (cast == null)
+                            {
+                                return 0;
+                            }
+                            else if (cast.VariableA == v || cast.VariableB == v)
+                            {
+                                return 1;
+                            }
+
+                            return 0;
+                        }))
+                        .First();
+                    newIndex = Variables.IndexOf(chosenVar);
+#elif H_LCV
+                    var chosenVar = Variables
+                        .Where(v => v.Current == null)
+                        .OrderByDescending(v => Constraints.Sum(c =>
+                        {
+                            var cast = c as BinaryConstraint<T>;
+                            if (cast == null)
+                            {
+                                return 0;
+                            }
+                            else if (cast.VariableA == v || cast.VariableB == v)
+                            {
+                                return 1;
+                            }
+
+                            return 0;
+                        }))
+                        .First();
+                    newIndex = Variables.IndexOf(chosenVar);
+#else
+                    newIndex = variableIndex + 1;
+#endif
+
+                    var solutionFound = FindSolutionForwardChecking(newIndex);
                     if (solutionFound)
                     {
                         return true;
+                    }
+                    else
+                    {
+                        // revert prune
+                        foreach (var pair in prunedValues)
+                        {
+                            Variables[pair.Item1].DomainMask[pair.Item2] = true;
+                        }
+                        // end of revert prune
                     }
                 }
                 else
                 {
                     Variables[variableIndex].Current = default;
-
-                    // revert prune
-                    if (prunedValues != null)
-                    {
-                        foreach (var pair in prunedValues)
-                        {
-                            Variables[pair.Item1].DomainMask[pair.Item2] = true;
-                        }
-                    }
-                    // end of revert prune
                 }
             }
+
+            Variables[variableIndex].Current = default;
 
             return false;
         }

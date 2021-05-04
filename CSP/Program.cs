@@ -10,16 +10,12 @@ namespace CSP
     {
         static void Main(string[] args)
         {
+            Random rng = new Random();
+            int seed = rng.Next();
             //TestEinstein();
-            for (int i = 0; i < 10; i++)
-            {
-                TestMCP();
-            }
+            TestMCP(seed);
             //TestEinsteinFC();
-            for (int i = 0; i < 10; i++)
-            {
-                TestMCPFC();
-            }
+            TestMCPFC(seed);
         }
 
         static void TestEinstein()
@@ -39,10 +35,16 @@ namespace CSP
 
         static void TestMCP()
         {
+            TestMCP(0);
+        }
+
+        static void TestMCP(int seed)
+        {
             int solutionCount = 0;
             MapColoringProblem riddle = new MapColoringProblem();
             riddle.X = 7;
             riddle.Y = 7;
+            riddle.Seed = seed;
             riddle.Initialize();
             riddle.OnSolutionFound += (xd) =>
             {
@@ -75,10 +77,16 @@ namespace CSP
 
         static void TestMCPFC()
         {
+            TestMCPFC(0);
+        }
+
+        static void TestMCPFC(int seed)
+        {
             int solutionCount = 0;
             MapColoringProblem riddle = new MapColoringProblem();
             riddle.X = 7;
             riddle.Y = 7;
+            riddle.Seed = seed;
             riddle.Initialize();
             riddle.OnSolutionFound += (xd) =>
             {
@@ -96,8 +104,5 @@ namespace CSP
 
         // TODO NAPRAWIĆ GENEROWANIE
         // bug: niepoprawna detekcja kolizji dla pionowych linii? definitywnie coś jest rozjebane ale na razie nie wiem co xd
-
-        // TODO Naprawić te testy bo nie mogę na nie patrzeć xD
-        // TODO Seedy i kompnentyzacja kodu ;)
     }
 }
