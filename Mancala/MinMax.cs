@@ -7,7 +7,7 @@ namespace Mancala
 {
     public class MinMax
     {
-        public int Depth { get; set; } = 10;
+        public int Depth { get; set; } = 8;
 
         private Game game;
         private Player player;
@@ -59,7 +59,7 @@ namespace Mancala
                     var child = children[i];
                     if (child != null)
                     {
-                        float eval = EvaluatePosition(child, player);
+                        float eval = MinMaxRec(depth - 1, child, child.CurrentPlayer, out _);
                         if (eval > value)
                         {
                             bestIndex = i;
@@ -78,7 +78,7 @@ namespace Mancala
                     var child = children[i];
                     if (child != null)
                     {
-                        float eval = EvaluatePosition(child, player);
+                        float eval = MinMaxRec(depth - 1, child, child.CurrentPlayer, out _);
                         if (eval < value)
                         {
                             bestIndex = i;
