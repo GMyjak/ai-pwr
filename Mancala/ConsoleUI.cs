@@ -2,36 +2,56 @@
 
 namespace Mancala
 {
+    public enum PlayerType
+    {
+        Human,
+        Computer
+    }
+
     public class ConsoleUI
     {
         private Game state = new Game();
-        private Algo algorithm = Algo.AlphaBeta;
+        
+        public PlayerType p1 = PlayerType.Human;
+        public PlayerType p2 = PlayerType.Computer;
+        public bool firstAiMoveRandom = false;
+        public Algo algorithm = Algo.AlphaBeta;
 
-        public void RunPVP()
+        public void Run()
         {
             bool loopFlag = true;
             state.OnGameOver += () => { loopFlag = false; };
-            while (loopFlag)
+
+            if (firstAiMoveRandom)
             {
-                GetPlayerMove();
+                state.MakeRandomMove();
+                state.MakeRandomMove();
             }
 
-            Console.WriteLine("GAME OVER");
-        }
-
-        public void RunPVE()
-        {
-            bool loopFlag = true;
-            state.OnGameOver += () => { loopFlag = false; };
             while (loopFlag)
             {
+                Console.WriteLine(state + "\n");
                 if (state.CurrentPlayer == Player.A)
                 {
-                    GetPlayerMove();
+                    if (p1 == PlayerType.Human)
+                    {
+                        GetPlayerMove();
+                    }
+                    else
+                    {
+                        GetAiMove();
+                    }
                 }
                 else
                 {
-                    GetAiMove();
+                    if (p2 == PlayerType.Human)
+                    {
+                        GetPlayerMove();
+                    }
+                    else
+                    {
+                        GetAiMove();
+                    }
                 }
             }
 
@@ -42,18 +62,17 @@ namespace Mancala
 
         private void GetAiMove()
         {
-            MinMax mm = new MinMax(state, Player.B, algorithm);
+            MinMax mm = new MinMax(state, state.CurrentPlayer, algorithm);
             var move = mm.Move();
-            state.Move(Player.B, move);
-
             if (move.Pass)
             {
-                Console.WriteLine("BOT forced to skip\n");
+                Console.WriteLine($"BOT {state.CurrentPlayer} forced to skip\n");
             }
             else
             {
-                Console.WriteLine("BOT moved to " + move.MoveIndex + "\n");
+                Console.WriteLine($"BOT {state.CurrentPlayer} moved to {move.MoveIndex}\n");
             }
+            state.Move(state.CurrentPlayer, move);
         }
 
         private void GetPlayerMove()

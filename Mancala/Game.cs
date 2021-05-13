@@ -48,6 +48,8 @@ namespace Mancala
             Reset();
         }
 
+        // Movement
+
         public List<Move> GetAvailableMoves()
         {
             List<Move> result = new List<Move>();
@@ -77,21 +79,12 @@ namespace Mancala
             return holes[index] > 0;
         }
 
-        public void Reset()
+        public void MakeRandomMove()
         {
-            PlayerAHoles = new List<int>();
-            PlayerBHoles = new List<int>();
-
-            for (int i = 0; i < GameSize; i++)
-            {
-                PlayerAHoles.Add(GameInit);
-                PlayerBHoles.Add(GameInit);
-            }
-
-            PlayerAWell = 0;
-            PlayerBWell = 0;
-
-            CurrentPlayer = Player.A;
+            var moves = GetAvailableMoves();
+            Random rng = new Random();
+            moves = moves.OrderBy(m => rng.Next()).ToList();
+            Move(CurrentPlayer, moves[0]);
         }
 
         public bool Move(Player p, Move move)
@@ -214,14 +207,8 @@ namespace Mancala
             return result;
         }
 
-        public void LoadState(Game from)
-        {
-            CurrentPlayer = from.CurrentPlayer;
-            PlayerAHoles = new List<int>(from.PlayerAHoles);
-            PlayerAWell = from.PlayerAWell;
-            PlayerBHoles = new List<int>(from.PlayerBHoles);
-            PlayerBWell = from.PlayerBWell;
-        }
+        #region StateManagement
+        // State management
 
         public bool IsGameOver()
         {
@@ -253,6 +240,38 @@ namespace Mancala
             }
         }
 
+        #endregion
+
+        #region Utils
+
+        // Utils
+
+        public void Reset()
+        {
+            PlayerAHoles = new List<int>();
+            PlayerBHoles = new List<int>();
+
+            for (int i = 0; i < GameSize; i++)
+            {
+                PlayerAHoles.Add(GameInit);
+                PlayerBHoles.Add(GameInit);
+            }
+
+            PlayerAWell = 0;
+            PlayerBWell = 0;
+
+            CurrentPlayer = Player.A;
+        }
+        
+        public void LoadState(Game from)
+        {
+            CurrentPlayer = from.CurrentPlayer;
+            PlayerAHoles = new List<int>(from.PlayerAHoles);
+            PlayerAWell = from.PlayerAWell;
+            PlayerBHoles = new List<int>(from.PlayerBHoles);
+            PlayerBWell = from.PlayerBWell;
+        }
+
         public override string ToString()
         {
             string res = "";
@@ -273,5 +292,7 @@ namespace Mancala
 
             return res;
         }
+
+        #endregion
     }
 }
