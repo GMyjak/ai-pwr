@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Mancala
 {
@@ -32,11 +30,7 @@ namespace Mancala
                 }
                 else
                 {
-                    MinMax mm = new MinMax(state, Player.B);
-                    int move = mm.Move();
-                    state.Move(Player.B, move);
-
-                    Console.WriteLine("BOT moved to " + move + "\n");
+                    GetAiMove();
                 }
             }
 
@@ -45,8 +39,32 @@ namespace Mancala
             Console.WriteLine("\nWinner: " + state.GetWinningPlayer());
         }
 
-        public void GetPlayerMove()
+        private void GetAiMove()
         {
+            MinMax mm = new MinMax(state, Player.B);
+            var move = mm.Move();
+            state.Move(Player.B, move);
+
+            if (move.Pass)
+            {
+                Console.WriteLine("BOT forced to skip\n");
+            }
+            else
+            {
+                Console.WriteLine("BOT moved to " + move.MoveIndex + "\n");
+            }
+        }
+
+        private void GetPlayerMove()
+        {
+            var moves = state.GetAvailableMoves();
+            if (moves.Count == 1 && moves[0].Pass)
+            {
+                Console.WriteLine($"Player {state.CurrentPlayer} forced to skip");
+                state.Move(state.CurrentPlayer, moves[0]);
+                return;
+            }
+
             Console.WriteLine(state + "\n");
             Console.WriteLine("Player " + state.CurrentPlayer + " move: ");
             string input = Console.ReadLine();
@@ -58,7 +76,7 @@ namespace Mancala
                     return;
                 }
 
-                state.Move(state.CurrentPlayer, parsed);
+                state.Move(state.CurrentPlayer, Move.NormalMove(parsed));
                 Console.WriteLine("Moved successfully\n");
             }
             else

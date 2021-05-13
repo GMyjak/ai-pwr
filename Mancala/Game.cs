@@ -41,11 +41,40 @@ namespace Mancala
         public List<int> playerBHoles { get; private set; }
         public int playerBWell { get; private set; }
 
-        private bool passFlag = false;
+        public bool PassFlag { get; private set; }= false;
 
         public Game()
         {
             Reset();
+        }
+
+        public List<Move> GetAvailableMoves()
+        {
+            List<Move> result = new List<Move>();
+            if (PassFlag)
+            {
+                result.Add(Mancala.Move.PassingMove());
+                return result;
+            }
+            else
+            {
+                List<int> holes = CurrentPlayer == Player.A ? playerAHoles : playerBHoles;
+                foreach (var hole in holes)
+                {
+                    if (hole > 0)
+                    {
+                        result.Add(Mancala.Move.NormalMove(hole));
+                    }
+                }
+
+                return result;
+            }
+        }
+
+        public bool IsValidMove(int index)
+        {
+            List<int> holes = CurrentPlayer == Player.A ? playerAHoles : playerBHoles;
+            return holes[index] > 0;
         }
 
         public void Reset()
@@ -65,20 +94,21 @@ namespace Mancala
             CurrentPlayer = Player.A;
         }
 
-        public bool Pass(Player p)
+        public bool Move(Player p, Move move)
         {
             if (p != CurrentPlayer)
             {
                 return false;
             }
 
-            CurrentPlayer = PlayerUtils.Other(CurrentPlayer);
-            return true;
-        }
+            if (move.Pass)
+            {
+                PassFlag = false;
+                CurrentPlayer = PlayerUtils.Other(CurrentPlayer);
+                return true;
+            }
 
-        public bool Move(Player p, int index)
-        {
-            Game nextState = TryMove(p, index, out bool error);
+            Game nextState = TryMove(p, move.MoveIndex, out bool error);
             if (!error)
             {
                 LoadState(nextState);
@@ -177,10 +207,9 @@ namespace Mancala
             }
 
             result.CurrentPlayer = PlayerUtils.Other(result.CurrentPlayer);
-            if (keepTurnFlag)
-            {
-                result.Pass(result.CurrentPlayer);
-            }
+
+            // Force pass from other player
+            PassFlag = keepTurnFlag;
 
             return result;
         }
@@ -192,12 +221,6 @@ namespace Mancala
             playerAWell = from.playerAWell;
             playerBHoles = new List<int>(from.playerBHoles);
             playerBWell = from.playerBWell;
-        }
-
-        public bool IsValidMove(int index)
-        {
-            List<int> holes = CurrentPlayer == Player.A ? playerAHoles : playerBHoles;
-            return holes[index] > 0;
         }
 
         public bool IsGameOver()
