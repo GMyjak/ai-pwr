@@ -4,6 +4,30 @@ using System.Linq;
 
 namespace Mancala
 {
+    public struct Move
+    {
+        public bool Pass { get; private set; }
+        public int MoveIndex { get; private set; }
+
+        public static Move PassingMove()
+        {
+            return new Move()
+            {
+                Pass = true,
+                MoveIndex = -1
+            };
+        }
+
+        public static Move NormalMove(int index)
+        {
+            return new Move()
+            {
+                Pass = false,
+                MoveIndex = index
+            };
+        }
+    }
+
     public class Game
     {
         public int GameSize { get; } = 6;
@@ -16,6 +40,8 @@ namespace Mancala
 
         public List<int> playerBHoles { get; private set; }
         public int playerBWell { get; private set; }
+
+        private bool passFlag = false;
 
         public Game()
         {

@@ -18,7 +18,7 @@ namespace CSP.MapColouring
         public List<int?> DomainTemplate { get; set; } = new List<int?>() { 1, 2, 3, 4 };
         public int X { get; set; }
         public int Y { get; set; }
-        public float SizePercent { get; set; } = 0.6f;
+        public float SizePercent { get; set; } = 0.3f;
         public int Seed { get; set; }
 
         public List<Connection> Connections { get; private set; }

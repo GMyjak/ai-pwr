@@ -1,12 +1,12 @@
-﻿#define ENABLE_LOGS
+﻿//#define ENABLE_LOGS
 
 // Heuristics - only one will be used
-//#define H_DOM_SIZE
+#define H_DOM_SIZE
 //#define H_MCV
-#define H_LCV
+//#define H_LCV
 
 // Whether to use AC3 algo
-#define AC3
+//#define AC3
 
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ namespace CSP.Abstract
         protected abstract void DefineVariables();
         protected abstract void DefineConstraints();
 
-        private int counter = 0;
+        public int Counter = 0;
 
         public void Initialize()
         {
@@ -36,12 +36,12 @@ namespace CSP.Abstract
 #if AC3
             Ac3();
 #endif
-            counter = 0;
+            Counter = 0;
             FindSolutionByBacktracking(0);
 #if ENABLE_LOGS
-            Console.WriteLine(counter);
+            Console.WriteLine(Counter);
 #endif
-            counter = 0;
+            //Counter = 0;
         }
 
         protected bool FindSolutionByBacktracking(int variableIndex)
@@ -55,7 +55,7 @@ namespace CSP.Abstract
             foreach (var val in Variables[variableIndex].Domain)
             {
                 Variables[variableIndex].Current = val;
-                counter++;
+                Counter++;
                 if (Constraints.All(con => con.Check.Invoke()))
                 {
                     var solutionFound = FindSolutionByBacktracking(variableIndex + 1);
@@ -191,12 +191,12 @@ namespace CSP.Abstract
                 }
             }
 
-            counter = 0;
+            Counter = 0;
             FindSolutionForwardChecking(0);
 #if ENABLE_LOGS
-            Console.WriteLine(counter);
+            Console.WriteLine(Counter);
 #endif
-            counter = 0;
+            //Counter = 0;
         }
 
         // int => indeks variabla, int - indeks wartosci z dziedziny
@@ -206,7 +206,7 @@ namespace CSP.Abstract
             foreach (var val in values)
             {
                 Variables[variableIndex].Current = val;
-                counter++;
+                Counter++;
                 if (Constraints.All(con => con.Check.Invoke()))
                 {
                     if (Variables.All(v => v.Current != null))

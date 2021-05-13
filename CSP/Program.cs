@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using CSP.EinsteinRiddle;
 using CSP.MapColouring;
@@ -8,14 +10,76 @@ namespace CSP
 {
     class Program
     {
+        static int sum = 0;
+
         static void Main(string[] args)
         {
             Random rng = new Random();
             int seed = rng.Next();
             //TestEinstein();
-            TestMCP(seed);
+            //TestMCP(seed);
             //TestEinsteinFC();
-            TestMCPFC(seed);
+            //TestMCPFC(seed);
+
+            //List<int> seeds = new List<int>();
+            //for (int i = 0; i < 6; i++)
+            //{
+            //    seeds.Add(rng.Next());
+            //}
+
+            //List<int> mapSizes = new List<int>() {3, 4,5,6,7,8,9};
+
+            //foreach (var mapSize in mapSizes)
+            //{
+            //    Console.WriteLine("TESTS FOR MAP SIZE " + mapSize);
+            //    float btCounter = 0;
+            //    float fcCounter = 0;
+            //    foreach (var i in seeds)
+            //    {
+            //        btCounter += TestMCP(i, mapSize);
+            //        fcCounter += TestMCPFC(i, mapSize);
+            //    }
+            //    Console.WriteLine($"BT: {btCounter/seeds.Count} FC: {fcCounter/seeds.Count}");
+            //}
+
+            //List<int> seeds = new List<int>();
+            //for (int i = 0; i < 6; i++)
+            //{
+            //    seeds.Add(rng.Next());
+            //}
+
+            //List<int> mapSizes = new List<int>() { 3, 4, 5, 6, 7, 8, 9 };
+
+            //foreach (var mapSize in mapSizes)
+            //{
+            //    Console.WriteLine("TESTS FOR MAP SIZE " + mapSize);
+            //    float btCounter = 0;
+            //    float fcCounter = 0;
+            //    foreach (var i in seeds)
+            //    {
+            //        Stopwatch sw = new Stopwatch();
+            //        sw.Start();
+            //        TestMCP(i, mapSize);
+            //        sw.Stop();
+            //        btCounter += sw.ElapsedMilliseconds;
+            //        sw.Reset();
+            //        sw.Start();
+            //        TestMCPFC(i, mapSize);
+            //        sw.Stop();
+            //        fcCounter += sw.ElapsedMilliseconds;
+            //    }
+            //    Console.WriteLine($"BT: {btCounter / seeds.Count} FC: {fcCounter / seeds.Count}");
+            //}
+
+            //sum = 0;
+            //foreach (var i in seeds)
+            //{
+            //    TestMCPFC(i);
+            //}
+
+            //Console.WriteLine((float)sum / 10);
+
+            TestMCPFC(rng.Next(), 25);
         }
 
         static void TestEinstein()
@@ -35,15 +99,15 @@ namespace CSP
 
         static void TestMCP()
         {
-            TestMCP(0);
+            //TestMCP(0);
         }
 
-        static void TestMCP(int seed)
+        static int TestMCP(int seed, int size)
         {
             int solutionCount = 0;
             MapColoringProblem riddle = new MapColoringProblem();
-            riddle.X = 7;
-            riddle.Y = 7;
+            riddle.X = size;
+            riddle.Y = size;
             riddle.Seed = seed;
             riddle.Initialize();
             riddle.OnSolutionFound += (xd) =>
@@ -57,7 +121,9 @@ namespace CSP
                 }
             };
             riddle.RunBacktracking();
-            Console.WriteLine("Solutions: " + solutionCount);
+            //Console.Write("BT: " + riddle.Counter);
+            //Console.WriteLine("Solutions: " + solutionCount);
+            return riddle.Counter;
         }
 
         static void TestEinsteinFC()
@@ -77,15 +143,15 @@ namespace CSP
 
         static void TestMCPFC()
         {
-            TestMCPFC(0);
+            //TestMCPFC(0);
         }
 
-        static void TestMCPFC(int seed)
+        static int TestMCPFC(int seed, int size)
         {
             int solutionCount = 0;
             MapColoringProblem riddle = new MapColoringProblem();
-            riddle.X = 7;
-            riddle.Y = 7;
+            riddle.X = size;
+            riddle.Y = size;
             riddle.Seed = seed;
             riddle.Initialize();
             riddle.OnSolutionFound += (xd) =>
@@ -99,10 +165,9 @@ namespace CSP
                 }
             };
             riddle.RunForwardChecking();
-            Console.WriteLine("Solutions: " + solutionCount);
+            sum += riddle.Counter;
+            //Console.WriteLine(" FC: " + riddle.Counter);
+            return riddle.Counter;
         }
-
-        // TODO NAPRAWIĆ GENEROWANIE
-        // bug: niepoprawna detekcja kolizji dla pionowych linii? definitywnie coś jest rozjebane ale na razie nie wiem co xd
     }
 }
