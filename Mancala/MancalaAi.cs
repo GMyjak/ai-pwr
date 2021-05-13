@@ -9,16 +9,16 @@ namespace Mancala
         AlphaBeta
     }
 
-    public class MinMax
+    public class MancalaAi
     {
-        public int Depth { get; set; } = 12;
+        public int Depth { get; set; } = 8;
 
         private Game game;
         private Player player;
         private Algo algorithm;
         private Func<Game, Player, float> EvaluationFunction = EvaluationHeuristics.TestEvaluation;
 
-        public MinMax(Game game, Player player, Algo algorithm)
+        public MancalaAi(Game game, Player player, Algo algorithm)
         {
             this.game = game;
             this.player = player;

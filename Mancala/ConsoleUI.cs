@@ -62,7 +62,7 @@ namespace Mancala
 
         private void GetAiMove()
         {
-            MinMax mm = new MinMax(state, state.CurrentPlayer, algorithm);
+            MancalaAi mm = new MancalaAi(state, state.CurrentPlayer, algorithm);
             var move = mm.Move();
             if (move.Pass)
             {
