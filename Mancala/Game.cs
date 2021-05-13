@@ -35,11 +35,11 @@ namespace Mancala
         public Player CurrentPlayer { get; private set; } = Player.A;
         public Action OnGameOver = () => { };
 
-        public List<int> playerAHoles { get; private set; }
-        public int playerAWell { get; private set; }
+        public List<int> PlayerAHoles { get; private set; }
+        public int PlayerAWell { get; private set; }
 
-        public List<int> playerBHoles { get; private set; }
-        public int playerBWell { get; private set; }
+        public List<int> PlayerBHoles { get; private set; }
+        public int PlayerBWell { get; private set; }
 
         public bool PassFlag { get; private set; }= false;
 
@@ -58,7 +58,7 @@ namespace Mancala
             }
             else
             {
-                List<int> holes = CurrentPlayer == Player.A ? playerAHoles : playerBHoles;
+                List<int> holes = CurrentPlayer == Player.A ? PlayerAHoles : PlayerBHoles;
                 foreach (var hole in holes)
                 {
                     if (hole > 0)
@@ -73,23 +73,23 @@ namespace Mancala
 
         public bool IsValidMove(int index)
         {
-            List<int> holes = CurrentPlayer == Player.A ? playerAHoles : playerBHoles;
+            List<int> holes = CurrentPlayer == Player.A ? PlayerAHoles : PlayerBHoles;
             return holes[index] > 0;
         }
 
         public void Reset()
         {
-            playerAHoles = new List<int>();
-            playerBHoles = new List<int>();
+            PlayerAHoles = new List<int>();
+            PlayerBHoles = new List<int>();
 
             for (int i = 0; i < GameSize; i++)
             {
-                playerAHoles.Add(GameInit);
-                playerBHoles.Add(GameInit);
+                PlayerAHoles.Add(GameInit);
+                PlayerBHoles.Add(GameInit);
             }
 
-            playerAWell = 0;
-            playerBWell = 0;
+            PlayerAWell = 0;
+            PlayerBWell = 0;
 
             CurrentPlayer = Player.A;
         }
@@ -133,14 +133,14 @@ namespace Mancala
 
             error = false;
             List<List<int>> holes = new List<List<int>>();
-            holes.Add(result.playerAHoles);
+            holes.Add(result.PlayerAHoles);
             if (p == Player.A)
             {
-                holes.Add(result.playerBHoles);
+                holes.Add(result.PlayerBHoles);
             }
             else
             {
-                holes.Insert(0, result.playerBHoles);
+                holes.Insert(0, result.PlayerBHoles);
             }
 
             if (holes[0][index] == 0 || p != CurrentPlayer)
@@ -168,11 +168,11 @@ namespace Mancala
                         stones--;
                         if (p == Player.A)
                         {
-                            result.playerAWell++;
+                            result.PlayerAWell++;
                         }
                         else
                         {
-                            result.playerBWell++;
+                            result.PlayerBWell++;
                         }
 
                         keepTurnFlag = true;
@@ -191,13 +191,13 @@ namespace Mancala
                         keepTurnFlag = false;
                         if (p == Player.A)
                         {
-                            result.playerAWell += holes[1][GameSize - index - 1];
-                            result.playerAWell += holes[0][index];
+                            result.PlayerAWell += holes[1][GameSize - index - 1];
+                            result.PlayerAWell += holes[0][index];
                         }
                         else
                         {
-                            result.playerBWell += holes[1][GameSize - index - 1];
-                            result.playerBWell += holes[0][index];
+                            result.PlayerBWell += holes[1][GameSize - index - 1];
+                            result.PlayerBWell += holes[0][index];
                         }
 
                         holes[1][GameSize - index - 1] = 0;
@@ -217,15 +217,15 @@ namespace Mancala
         public void LoadState(Game from)
         {
             CurrentPlayer = from.CurrentPlayer;
-            playerAHoles = new List<int>(from.playerAHoles);
-            playerAWell = from.playerAWell;
-            playerBHoles = new List<int>(from.playerBHoles);
-            playerBWell = from.playerBWell;
+            PlayerAHoles = new List<int>(from.PlayerAHoles);
+            PlayerAWell = from.PlayerAWell;
+            PlayerBHoles = new List<int>(from.PlayerBHoles);
+            PlayerBWell = from.PlayerBWell;
         }
 
         public bool IsGameOver()
         {
-            if (playerAHoles.All(i => i == 0) || playerBHoles.All(i => i == 0))
+            if (PlayerAHoles.All(i => i == 0) || PlayerBHoles.All(i => i == 0))
             {
                 return true;
             }
@@ -235,8 +235,8 @@ namespace Mancala
 
         public Player? GetWinningPlayer()
         {
-            int playerASum = playerAWell + playerAHoles.Sum(h => h);
-            int playerBSum = playerBWell + playerBHoles.Sum(h => h);
+            int playerASum = PlayerAWell + PlayerAHoles.Sum(h => h);
+            int playerBSum = PlayerBWell + PlayerBHoles.Sum(h => h);
 
             if (playerASum == playerBSum)
             {
@@ -257,19 +257,19 @@ namespace Mancala
         {
             string res = "";
 
-            res += "Player A well: " + playerAWell + "\n     ";
-            for (int i = playerAHoles.Count - 1; i >= 0; i--)
+            res += "Player A well: " + PlayerAWell + "\n     ";
+            for (int i = PlayerAHoles.Count - 1; i >= 0; i--)
             {
-                res += playerAHoles[i] + " ";
+                res += PlayerAHoles[i] + " ";
             }
             res += "<- A\n";
             res += "B -> ";
-            for (int i = 0; i < playerBHoles.Count; i++)
+            for (int i = 0; i < PlayerBHoles.Count; i++)
             {
-                res += playerBHoles[i] + " ";
+                res += PlayerBHoles[i] + " ";
             }
 
-            res += "\nPlayer B well: " + playerBWell + "\n";
+            res += "\nPlayer B well: " + PlayerBWell + "\n";
 
             return res;
         }

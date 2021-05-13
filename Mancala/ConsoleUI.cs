@@ -5,6 +5,7 @@ namespace Mancala
     public class ConsoleUI
     {
         private Game state = new Game();
+        private Algo algorithm = Algo.AlphaBeta;
 
         public void RunPVP()
         {
@@ -41,7 +42,7 @@ namespace Mancala
 
         private void GetAiMove()
         {
-            MinMax mm = new MinMax(state, Player.B);
+            MinMax mm = new MinMax(state, Player.B, algorithm);
             var move = mm.Move();
             state.Move(Player.B, move);
 

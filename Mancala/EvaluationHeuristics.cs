@@ -27,19 +27,19 @@ namespace Mancala
 
             if (player == Player.A)
             {
-                score += game.playerAWell * wellWeight;
-                score += game.playerAHoles.Sum(h => h) * holeSumWeight;
+                score += game.PlayerAWell * wellWeight;
+                score += game.PlayerAHoles.Sum(h => h) * holeSumWeight;
 
-                score -= game.playerBWell * wellWeight;
-                score -= game.playerBHoles.Sum(h => h) * enemyHoleSumWeight;
+                score -= game.PlayerBWell * wellWeight;
+                score -= game.PlayerBHoles.Sum(h => h) * enemyHoleSumWeight;
             }
             else
             {
-                score += game.playerBWell * wellWeight;
-                score += game.playerBHoles.Sum(h => h) * holeSumWeight;
+                score += game.PlayerBWell * wellWeight;
+                score += game.PlayerBHoles.Sum(h => h) * holeSumWeight;
 
-                score -= game.playerAWell * wellWeight;
-                score -= game.playerAHoles.Sum(h => h) * enemyHoleSumWeight;
+                score -= game.PlayerAWell * wellWeight;
+                score -= game.PlayerAHoles.Sum(h => h) * enemyHoleSumWeight;
             }
 
             return score;
