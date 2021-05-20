@@ -28,12 +28,19 @@ namespace Mancala
         }
     }
 
+    public struct StoneAddition
+    {
+        public Player PlayerFrom;
+        public int PlayerFromIndex;
+        public Player PlayerTo;
+        public int PlayerToIndex;
+    }
+
     public class Game
     {
         public int GameSize { get; } = 6;
         public int GameInit { get; } = 4;
         public Player CurrentPlayer { get; private set; } = Player.A;
-        public Action OnGameOver = () => { };
 
         public List<int> PlayerAHoles { get; private set; }
         public int PlayerAWell { get; private set; }
@@ -41,7 +48,10 @@ namespace Mancala
         public List<int> PlayerBHoles { get; private set; }
         public int PlayerBWell { get; private set; }
 
-        public bool PassFlag { get; private set; }= false;
+        public bool PassFlag { get; private set; } = false;
+
+        public Action OnGameOver = () => { };
+        public Action<List<StoneAddition>> OnMove = (_) => { };
 
         public Game()
         {
@@ -144,6 +154,9 @@ namespace Mancala
 
             int stones = holes[0][index];
             holes[0][index] = 0;
+            int initialIndex = index;
+            Player initialPlayer = CurrentPlayer;
+            List<StoneAddition> moves = new List<StoneAddition>();
             Player nextWellOwner = p;
             bool keepTurnFlag = true;
 
@@ -155,10 +168,17 @@ namespace Mancala
                 {
                     holes.Add(holes[0]);
                     holes.RemoveAt(0);
-                    index = 0;
                     if (nextWellOwner == p)
                     {
                         stones--;
+                        moves.Add(new StoneAddition()
+                        {
+                            PlayerFrom = initialPlayer,
+                            PlayerTo = nextWellOwner,
+                            PlayerFromIndex = initialIndex,
+                            PlayerToIndex = index,
+                        });
+
                         if (p == Player.A)
                         {
                             result.PlayerAWell++;
@@ -168,6 +188,7 @@ namespace Mancala
                             result.PlayerBWell++;
                         }
 
+                        index = 0;
                         keepTurnFlag = true;
                     }
                     nextWellOwner = PlayerUtils.Other(nextWellOwner);
@@ -177,11 +198,19 @@ namespace Mancala
                 {
                     holes[0][index]++;
                     stones--;
+                    keepTurnFlag = false;
+
+                    moves.Add(new StoneAddition()
+                    {
+                        PlayerFrom = initialPlayer,
+                        PlayerTo = nextWellOwner,
+                        PlayerFromIndex = initialIndex,
+                        PlayerToIndex = index,
+                    });
 
                     if (holes[0][index] == 1 && nextWellOwner == p && stones == 0)
                     {
                         // Strike
-                        keepTurnFlag = false;
                         if (p == Player.A)
                         {
                             result.PlayerAWell += holes[1][GameSize - index - 1];
@@ -203,6 +232,8 @@ namespace Mancala
 
             // Force pass from other player
             PassFlag = keepTurnFlag;
+
+            OnMove?.Invoke(moves);
 
             return result;
         }
