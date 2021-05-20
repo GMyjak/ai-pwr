@@ -111,10 +111,11 @@ namespace Mancala
                 return true;
             }
 
-            Game nextState = TryMove(p, move.MoveIndex, out bool error);
+            Game nextState = TryMove(p, move.MoveIndex, out bool error, out var moves);
             if (!error)
             {
                 LoadState(nextState);
+                OnMove?.Invoke(moves);
             }
             else
             {
@@ -129,8 +130,9 @@ namespace Mancala
             return true;
         }
 
-        public Game TryMove(Player p, int index, out bool error)
+        public Game TryMove(Player p, int index, out bool error, out List<StoneAddition> moves)
         {
+            moves = null;
             Game result = new Game();
             result.LoadState(this);
 
@@ -156,7 +158,7 @@ namespace Mancala
             holes[0][index] = 0;
             int initialIndex = index;
             Player initialPlayer = CurrentPlayer;
-            List<StoneAddition> moves = new List<StoneAddition>();
+            moves = new List<StoneAddition>();
             Player nextWellOwner = p;
             bool keepTurnFlag = true;
 
@@ -233,7 +235,7 @@ namespace Mancala
             // Force pass from other player
             PassFlag = keepTurnFlag;
 
-            OnMove?.Invoke(moves);
+            //OnMove?.Invoke(moves);
 
             return result;
         }

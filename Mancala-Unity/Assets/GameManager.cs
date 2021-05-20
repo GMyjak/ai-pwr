@@ -18,6 +18,9 @@ public class GameManager : MonoBehaviour
 
     private bool moveLockFlag = false;
 
+    private bool isPlayerAComputer = false;
+    private bool isPlayerBComputer = false;
+
     void Awake()
     {
         game = new Game();
@@ -25,14 +28,42 @@ public class GameManager : MonoBehaviour
         game.OnGameOver += OnGameOver;
         game.OnMove += OnMove;
 
-        board.OnClick += PerformMove;
+        board.OnClick = PerformMove;
     }
 
     void Start()
     {
         currentPlayerDisplay.Display(game.CurrentPlayer);
-        board.EnableActions(game.CurrentPlayer);
+        board.DisableActions(game.CurrentPlayer);
         board.DisableActions(PlayerUtils.Other(game.CurrentPlayer));
+        if (game.CurrentPlayer == Player.A && !isPlayerAComputer ||
+            game.CurrentPlayer == Player.B && !isPlayerBComputer)
+        {
+            board.EnableActions(game.CurrentPlayer);
+        }
+        
+    }
+
+    void Update()
+    {
+        if (game.CurrentPlayer == Player.A && isPlayerAComputer && !moveLockFlag)
+        {
+            moveLockFlag = true;
+            MoveAsAi();
+        }
+        else if (game.CurrentPlayer == Player.B && isPlayerBComputer && !moveLockFlag)
+        {
+            moveLockFlag = true;
+            MoveAsAi();
+        }
+    }
+
+    private void MoveAsAi()
+    {
+        MancalaAi mm = new MancalaAi(game, game.CurrentPlayer, Algo.MinMax);
+        var move = mm.Move();
+        PerformMove(move.MoveIndex);
+        //game.Move(game.CurrentPlayer, move);
     }
 
     private void OnGameOver()
@@ -149,7 +180,11 @@ public class GameManager : MonoBehaviour
         }
 
         currentPlayerDisplay.Display(game.CurrentPlayer);
-        board.EnableActions(game.CurrentPlayer);
+        if (game.CurrentPlayer == Player.A && !isPlayerAComputer ||
+            game.CurrentPlayer == Player.B && !isPlayerBComputer)
+        {
+            board.EnableActions(game.CurrentPlayer);
+        }
         board.DisableActions(PlayerUtils.Other(game.CurrentPlayer));
         moveLockFlag = false;
     }
@@ -174,5 +209,20 @@ public class GameManager : MonoBehaviour
         board.Reset();
         Awake();
         Start();
+    }
+
+    public void Reset(int playerA, int playerB)
+    {
+        if (!moveLockFlag)
+        {
+            isPlayerAComputer = playerA == 1;
+            isPlayerBComputer = playerB == 1;
+
+            Reset();
+        }
+        else
+        {
+            Debug.Log("Cannot restart rn");
+        }
     }
 }

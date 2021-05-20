@@ -53,6 +53,6 @@ public class BoardEntity : MonoBehaviour
 
     public void Reset()
     {
-        number = initialValue;
+        Number = initialValue;
     }
 }
