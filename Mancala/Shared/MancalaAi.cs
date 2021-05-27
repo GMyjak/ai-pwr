@@ -11,12 +11,12 @@ namespace Mancala
 
     public class MancalaAi
     {
-        public int Depth { get; set; } = 3;
+        public int Depth { get; set; } = 8;
 
         private Game game;
         private Player player;
         private Algo algorithm;
-        private Func<Game, Player, float> EvaluationFunction = EvaluationHeuristics.TestEvaluation;
+        public Func<Game, Player, float> EvaluationFunction = EvaluationHeuristics.TestEvaluation;
 
         public MancalaAi(Game game, Player player, Algo algorithm)
         {

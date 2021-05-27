@@ -18,10 +18,36 @@ namespace Mancala
 
             //ui.Run();
 
-            CompareAlgorithms(10);
+            //CompareAlgorithms(10);
+
+            //SimpleEvETest(Algo.AlphaBeta);
+
+            int playerACounter = 0;
+            int playerBCounter = 0;
+
+            for (int i = 0; i < 20; i++)
+            {
+                SimpleEvETest(Algo.AlphaBeta, 
+                    EvaluationHeuristics.CompareScoresAdaptiveHoles,
+                    EvaluationHeuristics.TestEvaluation,  
+                    playerWon: (p) =>
+                {
+                    if (p.HasValue && p.Value == Player.A)
+                    {
+                        playerACounter++;
+                    }
+                    else if (p.HasValue && p.Value == Player.B)
+                    {
+                        playerBCounter++;
+                    }
+                });
+            }
+
+            Console.WriteLine($"A: {playerACounter}, B: {playerBCounter}");
         }
 
-        static void SimpleEvETest(Algo algo)
+        static void SimpleEvETest(Algo algo, Func<Game, Player, float> heuristicA = null,
+            Func<Game, Player, float> heuristicB = null, Action<Player?> playerWon = null)
         {
             ConsoleUI ui = new ConsoleUI()
             {
@@ -30,6 +56,19 @@ namespace Mancala
                 firstAiMoveRandom = true,
                 algorithm = algo,
             };
+            if (heuristicA != null)
+            {
+                ui.playerAHeuristic = heuristicA;
+            }
+            if (heuristicB != null)
+            {
+                ui.playerBHeuristic = heuristicB;
+            }
+
+            if (playerWon != null)
+            {
+                ui.OnPlayerWon += playerWon;
+            }
 
             ui.Run();
         }

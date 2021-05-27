@@ -170,6 +170,7 @@ namespace Mancala
                 {
                     holes.Add(holes[0]);
                     holes.RemoveAt(0);
+                    index = 0;
                     if (nextWellOwner == p)
                     {
                         stones--;
@@ -190,7 +191,6 @@ namespace Mancala
                             result.PlayerBWell++;
                         }
 
-                        index = 0;
                         keepTurnFlag = true;
                     }
                     nextWellOwner = PlayerUtils.Other(nextWellOwner);

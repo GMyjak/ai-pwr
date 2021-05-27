@@ -16,6 +16,10 @@ namespace Mancala
         public PlayerType p2 = PlayerType.Computer;
         public bool firstAiMoveRandom = false;
         public Algo algorithm = Algo.AlphaBeta;
+        public Func<Game, Player, float> playerAHeuristic = EvaluationHeuristics.TestEvaluation;
+        public Func<Game, Player, float> playerBHeuristic = EvaluationHeuristics.TestEvaluation;
+        public bool verbose = false;
+        public Action<Player?> OnPlayerWon = (_) => { };
 
         public void Run()
         {
@@ -30,7 +34,11 @@ namespace Mancala
 
             while (loopFlag)
             {
-                Console.WriteLine(state + "\n");
+                if (verbose)
+                {
+                    Console.WriteLine(state + "\n");
+                }
+                
                 if (state.CurrentPlayer == Player.A)
                 {
                     if (p1 == PlayerType.Human)
@@ -55,20 +63,32 @@ namespace Mancala
                 }
             }
 
-            Console.WriteLine("GAME OVER\n");
-            Console.WriteLine(state);
+            if (verbose)
+            {
+                Console.WriteLine("GAME OVER\n");
+                Console.WriteLine(state);
+            }
             Console.WriteLine("\nWinner: " + state.GetWinningPlayer());
+            OnPlayerWon?.Invoke(state.GetWinningPlayer());
         }
 
         private void GetAiMove()
         {
             MancalaAi mm = new MancalaAi(state, state.CurrentPlayer, algorithm);
+            if (state.CurrentPlayer == Player.A)
+            {
+                mm.EvaluationFunction = playerAHeuristic;
+            }
+            else
+            {
+                mm.EvaluationFunction = playerBHeuristic;
+            }
             var move = mm.Move();
-            if (move.Pass)
+            if (move.Pass && verbose)
             {
                 Console.WriteLine($"BOT {state.CurrentPlayer} forced to skip\n");
             }
-            else
+            else if (verbose)
             {
                 Console.WriteLine($"BOT {state.CurrentPlayer} moved to {move.MoveIndex}\n");
             }
@@ -85,8 +105,10 @@ namespace Mancala
                 return;
             }
 
-            Console.WriteLine(state + "\n");
+            Console.WriteLine(state + "\n"); 
             Console.WriteLine("Player " + state.CurrentPlayer + " move: ");
+            
+            
             string input = Console.ReadLine();
             if (int.TryParse(input, out var parsed))
             {
