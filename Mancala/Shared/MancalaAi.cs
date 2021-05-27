@@ -11,7 +11,7 @@ namespace Mancala
 
     public class MancalaAi
     {
-        public int Depth { get; set; } = 8;
+        public int Depth { get; set; } = 3;
 
         private Game game;
         private Player player;
@@ -58,7 +58,7 @@ namespace Mancala
             {
                 if (nextState.IsValidMove(i))
                 {
-                    children.Add(nextState.TryMove(nextState.CurrentPlayer, i, out _));
+                    children.Add(nextState.TryMove(nextState.CurrentPlayer, i, out _, out _));
                 }
                 else
                 {
@@ -120,7 +120,7 @@ namespace Mancala
             {
                 if (nextState.IsValidMove(i))
                 {
-                    children.Add(nextState.TryMove(nextState.CurrentPlayer, i, out _));
+                    children.Add(nextState.TryMove(nextState.CurrentPlayer, i, out _, out _));
                 }
                 else
                 {
